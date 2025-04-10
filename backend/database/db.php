@@ -1,14 +1,15 @@
 <?php
 
-$env = parse_ini_file($_SERVER['DOCUMENT_ROOT'] . '/FUSALMO-licencias/backend/.env');
+use React\MySQL\Factory;
 
-$hostname = $env["HOSTNAME"];
-$dbuser = $env["DB_USER"];
-$dbpassword = $env["DB_PASSWORD"];
-$dbname = $env["DB_NAME"];
+$factory = new Factory();
 
-$conn = mysqli_connect($hostname, $dbuser, $dbpassword, $dbname);
+$connection = $factory->createLazyConnection('root:root@localhost/sitio_licencias_lis');
+$connection->on(
+  'error',
+  function (Exception $error) {
+    echo 'Error: ' . $error->getMessage() . PHP_EOL;
+  }
+);
 
-if ($conn->connect_error) {
-  die("Conexión fallida: " . $conn->connect_error);
-}
+return $connection;
