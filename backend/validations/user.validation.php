@@ -1,27 +1,37 @@
 <?php
 
 
-class UserValidation {
+class UserValidation
+{
 
-  public static function validateData($name, $email, $password, $rol) {
-    $errors = [];
+  public static function validateData($data)
+  {
+    //$name, $email, $password, $rol
 
-    if(empty($name) || strlen($name) < 3) {
-      $errors[] = "El nombre es obligatorio y debe tener al menos 3 caracteres";
+    //Validando que los datos no esten vacios
+    if (empty($data)) {
+      throw new Exception('Todos los campos son obligatorios');
     }
 
-    if(!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-      $errors[] = "El correo electrónico es inválido";
+    $name = $data['name'];
+    $email = $data['email'];
+    $password = $data['password'];
+    $rol = $data['rol'];
+
+    if (empty($name) || empty($email) || empty($password) || empty($rol)) {
+      throw new Exception('Todos los campos son obligatorios');
     }
 
-    if(empty($password)) {
-      $errors[] = "La contraseña es obligatoria y debe tener al menos 8 caracteres";
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+      throw new Exception('El correo no es valido');
     }
-
-    if(!empty($errors)) {
-      throw new Exception(implode(" | ", $errors));
-    }
-
   }
 
+  public static function validateConfirmPassword($password, $confirmPassword)
+  {
+    
+    if ($password !== $confirmPassword) {
+      throw new Exception('Las contraseñas no coinciden');
+    }
+  }
 }

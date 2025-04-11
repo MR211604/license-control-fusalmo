@@ -29,7 +29,7 @@ class LicenseController
   {
 
     if (empty($id)) {
-      return JSONResponse::response(400, ['ok' => false, 'error' => 'ID de producto no proporcionado']);
+      return JSONResponse::response(400, ['ok' => false, 'error' => 'ID de licencia no proporcionado']);
     }
 
     return $this->conn->query('SELECT * FROM licencias WHERE id = ?', [$id])->then(function ($result) {
@@ -118,7 +118,7 @@ class LicenseController
         });
       });
     } catch (Exception $e) {
-      return JSONResponse::response(400, ['ok' => false, 'error' => $e->getMessage()]);
+      return JSONResponse::response(500, ['ok' => false, 'error' => $e->getMessage()]);
     }
   }
 
