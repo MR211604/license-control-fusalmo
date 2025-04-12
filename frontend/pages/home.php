@@ -1,24 +1,12 @@
 <?php
-session_start();
 
+// Verificar si el usuario está autenticado
 if (!isset($_SESSION["user_id"])) {
-  header("Location: ../pages/login.php");
+  // Redirigir usando el parámetro page en lugar de cambiar la URL completa
+  header("Location: index.php?page=login");
   exit();
 }
 
-//Note: Los administradores a parte de poder ver las licencias, puede administrar los usuarios.
-include('./components/header.php');
-require_once('./database/db.php');
-require_once('./API/controllers/license.controller.php');
-
-$licenseController = new LicenseController($conn);
-
-$licenses = $licenseController->obtenerLicencias();
-
-if (isset($licenses["error"])) {
-  echo "<p>Error: " . $licenses["error"] . "</p>";
-  exit();
-}
 
 ?>
 
@@ -27,7 +15,6 @@ if (isset($licenses["error"])) {
   <h1 class="display-4">Bienvenido <strong><?php echo $_SESSION["username"] ?></strong></h1>
   <h1>Administración de licencias de FUSALMO</h1>
 </div>
-
 <!-- Formulario de licencias -->
 
 <div class="container">
@@ -104,11 +91,4 @@ if (isset($licenses["error"])) {
       </tr>
     </tbody>
   </table>
-
 </div>
-
-<?php
-
-include('./components/footer.php');
-
-?>

@@ -31,7 +31,7 @@ $userController = new UserController($connection);
 $r->addGroup('/license', function (RouteCollector $r) use ($licenseController) {
   $r->addRoute('GET', '/getAll', [$licenseController, 'getLicenses']);
   $r->addRoute('GET', '/{id:\d+}', [$licenseController, 'getLicenseById']);
-  $r->addRoute('POST', '/create', [$licenseController, 'addLicense']);
+  $r->addRoute('POST', '/create', [$licenseController, 'createLicense']);
   $r->addRoute('PUT', '/update/{id:\d+}', [$licenseController, 'updateLicenseById']);
   $r->addRoute('DELETE', '/delete/{id:\d+}', [$licenseController, 'delete']);
 });

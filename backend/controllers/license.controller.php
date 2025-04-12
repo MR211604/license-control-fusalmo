@@ -43,7 +43,7 @@ class LicenseController
     });
   }
 
-  public function addLicense(ServerRequestInterface $request)
+  public function createLicense(ServerRequestInterface $request)
   {
 
     try {

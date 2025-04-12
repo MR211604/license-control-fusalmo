@@ -1,13 +1,11 @@
-<footer>
-  <div class="container">
-    <p>&copy; <?php echo date("Y"); ?> FUSALMO. All rights reserved.</p>
-    <ul class="social-media">
-      <li><a href="https://www.facebook.com/FUSALMO" target="_blank">Facebook</a></li>
-      <li><a href="https://www.instagram.com/FUSALMO" target="_blank">Instagram</a></li>
-      <li><a href="https://fusalmo.org/" target="_blank">Sitio web</a></li>
-    </ul>
-  </div>
-</footer>
+<div class="container">
+  <p>&copy; <?php echo date("Y"); ?> FUSALMO. All rights reserved.</p>
+  <ul class="social-media">
+    <li><a href="https://www.facebook.com/FUSALMO" target="_blank">Facebook</a></li>
+    <li><a href="https://www.instagram.com/FUSALMO" target="_blank">Instagram</a></li>
+    <li><a href="https://fusalmo.org/" target="_blank">Sitio web</a></li>
+  </ul>
+</div>
 
 <style>
   footer {

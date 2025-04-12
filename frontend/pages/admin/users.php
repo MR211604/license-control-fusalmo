@@ -1,19 +1,5 @@
 <?php
 
-include('./components/header.php');
-
-require_once('./database/db.php');
-require_once('./API/controllers/users.controller.php');
-
-$usersController = new usersController($conn);
-
-$users = $usersController->getUsers();
-
-// //Obtiendo los datos del formulario
-// $stmt = $conn->prepare("SELECT id, nombre_usuario, contrasena, id_rol FROM usuario");
-// $stmt->execute();
-// $result = $stmt->get_result();
-
 ?>
 
 
