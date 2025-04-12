@@ -3,6 +3,9 @@
 use Psr\Http\Message\ServerRequestInterface;
 use React\MySQL\QueryResult;
 
+require __DIR__ . '/../validations/user.validation.php';
+
+
 class UserController
 {
 
@@ -61,7 +64,7 @@ class UserController
         'email' => $data['email'],
         'password' => $data['password'],
         'confirmPassword' => $data['confirmPassword'],
-        'role' => $data['role'] ?? 2 // Rol por defecto es 2 (Usuario)
+        'role' => $data['role'] ? $data['role'] : 2 // Rol por defecto es 2 (Usuario)
       ];
 
       UserValidation::validateConfirmPassword($userData['password'], $userData['confirmPassword']);
@@ -111,7 +114,7 @@ class UserController
         'email' => $data['email'],
         'password' => $data['password'],
         'confirmPassword' => $data['confirmPassword'],
-        'role' => $data['role'] ?? 2 // Rol por defecto es 2 (Usuario)
+        'role' => $data['role'] ? $data['role'] : 2 // Rol por defecto es 2 (Usuario)
       ];
 
       UserValidation::validateConfirmPassword($userData['password'], $userData['confirmPassword']);

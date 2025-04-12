@@ -14,18 +14,18 @@ require 'database/db.php';
 require './lib/router.php';
 require './controllers/license.controller.php';
 require './controllers/users.controller.php';
+require './controllers/auth.controller.php';
 
 $r = new RouteCollector(new Std(), new GroupCountBased());
 
 $licenseController = new LicenseController($connection);
 $userController = new UserController($connection);
+$authController = new AuthController($connection);
 
 //Authentication
-// $r->addGroup('/auth', function (RouteCollector $r) {
-//   $r->addRoute('POST', '/login','AuthController@login');
-//   $r->addRoute('POST', '/register', 'AuthController@register');
-//   $r->addRoute('POST', '/logout', 'AuthController@logout');
-// });
+$r->addGroup('/auth', function (RouteCollector $r) use ($authController) {
+  $r->addRoute('POST', '/login',[$authController, 'login']);
+});
 
 //Licenses
 $r->addGroup('/license', function (RouteCollector $r) use ($licenseController) {
