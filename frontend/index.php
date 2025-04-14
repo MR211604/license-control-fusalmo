@@ -7,13 +7,15 @@ session_start();
 $page = isset($_GET['page']) ? $_GET['page'] : 'home';
 
 // Lista de páginas válidas
-$allowed_pages = ['home', 'login', 'register'];
+$allowed_pages = ['home', 'login', 'register', 'admin/users'];
 
 // Validar la página
 if (!in_array($page, $allowed_pages)) {
   $page = 'home';
 }
 
+// Determinar la ruta completa del archivo a incluir
+$page_path = "./pages/{$page}.php";
 
 ?>
 
@@ -36,7 +38,13 @@ if (!in_array($page, $allowed_pages)) {
 
   <!-- main component -->
   <main class="container my-4">
-    <?php include("./pages/{$page}.php"); ?>
+    <?php 
+    if (file_exists($page_path)) {
+      include($page_path);
+    } else {
+      echo "<div class='alert alert-danger'>La página solicitada no existe.</div>";
+    }
+    ?>
   </main>
 
   <!-- footer component -->

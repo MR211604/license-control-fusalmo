@@ -8,6 +8,44 @@ if (!isset($_SESSION["user_id"])) {
 }
 
 
+
+// Obtener las licencias desde la API
+$licenses = [];
+$error_message = null;
+
+try {
+  // Configurar la petición cURL para obtener todas las licencias
+  $ch = curl_init();
+  curl_setopt($ch, CURLOPT_URL, 'http://localhost:8080/license/getAll');
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+  curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    'Content-Type: application/json',
+    // Si la API requiere token de autenticación:
+    // 'Authorization: Bearer ' . ($_SESSION['token'] ?? '')
+  ]);
+
+  // Ejecutar la petición
+  $response = curl_exec($ch);
+  $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+  curl_close($ch);
+
+  // Verificar si la petición fue exitosa
+  if ($httpCode == 200) {
+    $responseData = json_decode($response, true);
+    // Verificar si la respuesta contiene el array de licencias
+    if (isset($responseData['licencias']) && is_array($responseData['licencias'])) {
+      $licenses = $responseData['licencias'];
+    } else {
+      $error_message = "No se encontraron licencias en la respuesta";
+    }
+  } else {
+    $error_message = "Error al obtener licencias. Código: " . $httpCode;
+  }
+} catch (Exception $e) {
+  $error_message = "Error en la conexión: " . $e->getMessage();
+}
+
+
 ?>
 
 <!-- Titulo -->
@@ -16,6 +54,12 @@ if (!isset($_SESSION["user_id"])) {
   <h1>Administración de licencias de FUSALMO</h1>
 </div>
 <!-- Formulario de licencias -->
+
+<?php if ($error_message): ?>
+  <div class="alert alert-danger">
+    <?php echo htmlspecialchars($error_message); ?>
+  </div>
+<?php endif; ?>
 
 <div class="container">
   <div class="row">
@@ -35,7 +79,7 @@ if (!isset($_SESSION["user_id"])) {
         </div>
         <div class="form-group">
           <label for="password">Contraseña: </label>
-          <input type="text" class="form-control" id="password" name="password" placeholder="password">
+          <input type="password" class="form-control" id="password" name="password" placeholder="password">
         </div>
 
         <div class="form-row">
@@ -71,24 +115,30 @@ if (!isset($_SESSION["user_id"])) {
       </tr>
     </thead>
     <tbody>
-      <?php foreach ($licenses as $license) ?>
-      <tr>
-        <td><?php echo $license['id'] ?></td>
-        <td><?php echo $license['plataforma'] ?></td>
-        <td><?php echo $license['correo'] ?></td>
-        <td><?php echo $license['contrasena'] ?></td>
-        <td><?php echo $license['fecha_de_compra'] ?></td>
-        <td><?php echo $license['fecha_de_suspension'] ?></td>
-        <td><?php echo $license['fecha_de_renovacion'] ?></td>
-        <td><?php echo $license['fecha_de_vencimiento'] ?></td>
-        <td>
-          <form method="post">
-            <input type="hidden" name="license_id" id="license_id" value="<?php echo $license['id']; ?>" />
-            <input type="submit" name="accion" value="Enviar correo" class="btn btn-primary" />
-            <input type="submit" name="accion" value="Borrar" class="btn btn-danger" />
-          </form>
-        </td>
-      </tr>
+      <?php if (empty($licenses)): ?>
+        <tr>
+          <td colspan="8" class="text-center">No hay licencias disponibles</td>
+        </tr>
+      <?php else: ?>
+        <?php foreach ($licenses as $license): ?>
+          <tr>
+            <td><?php echo htmlspecialchars($license['id'] ?? ''); ?></td>
+            <td><?php echo htmlspecialchars($license['plataforma'] ?? ''); ?></td>
+            <td><?php echo htmlspecialchars($license['correo'] ?? ''); ?></td>
+            <td><?php echo htmlspecialchars($license['contrasena'] ?? ''); ?></td>
+            <td><?php echo htmlspecialchars($license['fecha_de_compra'] ?? ''); ?></td>
+            <td><?php echo htmlspecialchars($license['fecha_de_suspension'] ?? ''); ?></td>
+            <td><?php echo htmlspecialchars($license['fecha_de_vencimiento'] ?? ''); ?></td>
+            <td>
+              <form method="post">
+                <input type="hidden" name="license_id" value="<?php echo htmlspecialchars($license['id'] ?? ''); ?>" />
+                <input type="submit" name="accion" value="Enviar correo" class="btn btn-primary" />
+                <input type="submit" name="accion" value="Borrar" class="btn btn-danger" />
+              </form>
+            </td>
+          </tr>
+        <?php endforeach; ?>
+      <?php endif; ?>
     </tbody>
   </table>
 </div>

@@ -1,5 +1,42 @@
 <?php
 
+if (!isset($_SESSION["role_id"]) || $_SESSION["role_id"] != 1) {
+  header("Location: index.php?page=home");
+  exit();
+}
+
+// Obtener los usuarios desde la API
+$usuarios = [];
+$error_message = null;
+
+try {
+  $ch = curl_init();
+  curl_setopt($ch, CURLOPT_URL, 'http://localhost:8080/license/getAll');
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+  curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    'Content-Type: application/json',
+  ]);
+
+  // Ejecutar la petición
+  $response = curl_exec($ch);
+  $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+  curl_close($ch);
+
+  // Verificar si la petición fue exitosa
+  if ($httpCode == 200) {
+    $responseData = json_decode($response, true);
+    if (isset($responseData['usuarios']) && is_array($responseData['usuarios'])) {
+      $usuarios = $responseData['usuarios'];
+    } else {
+      $error_message = "No se encontraron usuarios en la respuesta";
+    }
+  } else {
+    $error_message = "Error al obtener usuarios. Código: " . $httpCode;
+  }
+} catch (Exception $e) {
+  $error_message = "Error en la conexión: " . $e->getMessage();
+}
+
 ?>
 
 
@@ -62,19 +99,19 @@
           </tr>
         </thead>
         <tbody>
-          <?php foreach ($users as $user) {  ?>
+          <?php foreach ($usuarios as $user) {  ?>
 
             <tr>
-              <td><?php echo $user['id_usuario'] ?></td>
-              <td><?php echo $user['nombre_usuario'] ?></td>
-              <td><?php echo $user['contrasena'] ?></td>
-              <td><?php echo $user['id_rol'] ?></td>
+              <td><?php echo htmlspecialchars($user['id_usuario'] ?? '') ?></td>
+              <td><?php echo htmlspecialchars($user['nombre_usuario'] ?? '') ?></td>
+              <td><?php echo htmlspecialchars($user['contrasena' ?? '']) ?></td>
+              <td><?php echo htmlspecialchars($user['id_rol'] ?? '') ?></td>
 
               <td>
                 <form method="POST">
                   <input type="hidden" name="user_id" id="user_id" value="<?php echo $user['id_usuario'] ?>">
                   <button type="submit" class="btn btn-danger">Eliminar</button>
-                                  
+
                 </form>
             </tr>
 

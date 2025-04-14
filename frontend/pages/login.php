@@ -8,11 +8,47 @@ if (isset($_SESSION["user_id"])) {
 // Procesar el formulario si se envió
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-  // Si la autenticación es exitosa:
-  $_SESSION["user_id"] = $user_id; // ID del usuario
-  $_SESSION["username"] = $username; // Nombre de usuario
-  header("Location: index.php?page=home");
-  exit();
+  //Haciendo la peticion HTTP hacia /auth/login
+
+  $data = [
+    'username' => $_POST['username'],
+    'password' => $_POST['password']
+  ];
+
+  $ch = curl_init();
+  curl_setopt($ch, CURLOPT_URL, 'http://localhost:8080/auth/login');
+  curl_setopt($ch, CURLOPT_POST, 1);
+  curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+  curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    'Content-Type: application/json',
+  ]);
+
+  $response = curl_exec($ch); 
+  $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+  curl_close($ch);
+
+  if($httpCode == 200) {
+    $userData = json_decode($response, true);
+
+    if($userData && isset($userData['user'])) {
+      $_SESSION["user_id"] = $userData['user']['id'];
+      $_SESSION["username"] = $userData['user']['username'];
+      $_SESSION["role_id"] = $userData['user']['role_id'];
+
+      header("Location: index.php?page=home");
+      exit();
+    } else {
+      $error_message = "Error al obtener los datos del usuario.";
+    }
+  } else {
+    $responseData = json_decode($response, true);
+    if($responseData && isset($responseData['message'])) {
+      $error_message = $responseData['message'];
+    } else {
+      $error_message = "Error desconocido al iniciar sesión.";
+    }    
+  }
 }
 
 
@@ -43,7 +79,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
               </div>
               <div class="form-group">
                 <label for="password">Contraseña</label>
-                <input type="text" class="form-control" name="password" placeholder="Ingresar usuario">
+                <input type="password" class="form-control" name="password" placeholder="Ingresar usuario">
               </div>
               <button type="submit" class="btn btn-primary mt-4">Iniciar sesión</button>
             </form>
