@@ -48,7 +48,6 @@ class LicenseController
 
     try {
 
-      //$plataforma, $correo, $contrasena, $fechaDeCompra, $fechaDeSuspension, $fechaDeRenovacion, $fechaDeVencimiento
       $body = $request->getBody()->getContents();
       $data = json_decode($body, true);
       LicenseValidation::validateData($data);

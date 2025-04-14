@@ -6,19 +6,14 @@ class UserValidation
 
   public static function validateData($data)
   {
-    //$name, $email, $password, $rol
 
-    //Validando que los datos no esten vacios
-    if (empty($data)) {
-      throw new Exception('Todos los campos son obligatorios');
-    }
-
-    $name = $data['name'];
+    $name = $data['username'];
     $email = $data['email'];
     $password = $data['password'];
+    $confirmPassword = $data['confirmPassword'];
     $rol = $data['rol'];
 
-    if (empty($name) || empty($email) || empty($password) || empty($rol)) {
+    if (empty($name) || empty($email) || empty($password) || empty($rol) || empty($confirmPassword)) {
       throw new Exception('Todos los campos son obligatorios');
     }
 

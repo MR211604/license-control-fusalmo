@@ -18,11 +18,15 @@ class UserController
 
   public function getUsers()
   {
-    return $this->conn->query('SELECT * FROM usuario')->then(function ($result) {
-      return JSONResponse::response(200, ['ok' => true, 'usuarios' => $result->resultRows]);
-    }, function (Exception $e) {
+    try {
+      return $this->conn->query('SELECT * FROM usuario')->then(function ($result) {
+        return JSONResponse::response(200, ['ok' => true, 'usuarios' => $result->resultRows]);
+      }, function (Exception $e) {
+        return JSONResponse::response(500, ['ok' => false, 'error' => 'Error al obtener los usuarios: ' . $e->getMessage()]);
+      });
+    } catch (Exception $e) {
       return JSONResponse::response(500, ['ok' => false, 'error' => 'Error al obtener los usuarios: ' . $e->getMessage()]);
-    });
+    }
   }
 
   public function getUserById(ServerRequestInterface $request, $id)
@@ -31,7 +35,7 @@ class UserController
       return JSONResponse::response(400, ['ok' => false, 'error' => 'ID de usuario no proporcionado']);
     }
 
-    return $this->conn->query('SELECT * FROM usuario WHERE id = ?', [$id])->then(function ($result) {
+    return $this->conn->query('SELECT * FROM usuario WHERE id_usuario = ?', [$id])->then(function ($result) {
       if (count($result->resultRows) > 0) {
         return JSONResponse::response(200, ['ok' => true, 'usuario' => $result->resultRows[0]]);
       } else {
@@ -46,6 +50,8 @@ class UserController
   {
     return $this->conn->query('SELECT * FROM usuario WHERE correo = ? OR nombre_usuario = ?', [$email, $username])->then(function ($result) {
       return count($result->resultRows) > 0;
+    }, function (Exception $e) {
+      return JSONResponse::response(500, ['ok' => false, 'error' => 'Error al verificar la existencia del usuario: ' . $e->getMessage()]);
     });
   }
 
@@ -64,34 +70,54 @@ class UserController
         'email' => $data['email'],
         'password' => $data['password'],
         'confirmPassword' => $data['confirmPassword'],
-        'role' => $data['role'] ? $data['role'] : 2 // Rol por defecto es 2 (Usuario)
+        'rol' => $data['rol'] ? $data['rol'] : 2 // Rol por defecto es 2 (Usuario)
       ];
+
+      UserValidation::validateData($userData);
 
       UserValidation::validateConfirmPassword($userData['password'], $userData['confirmPassword']);
 
-      if ($this->userExists($userData['email'], $userData['username'])) {
-        return JSONResponse::response(400, [
-          "ok" => false,
-          "error" => "El usuario ingresado ya existe"
-        ]);
-      }
+      // Modificar esta parte para manejar la promesa correctamente
+      return $this->userExists($userData['email'], $userData['username'])->then(
+        function ($exists) use ($userData) {
 
-      $params = array_values($userData);
-      $createQuery = 'INSERT INTO usuario (nombre_usuario, correo, contrasena, id_rol) VALUES (?, ?, ?, ?)';
+          if ($exists === true) {
+            return JSONResponse::response(400, [
+              "ok" => false,
+              "error" => "El correo o usuario ingresado ya está en uso"
+            ]);
+          }
 
-      return $this->conn->query($createQuery, $params)->then(function (QueryResult $result) use ($userData) {
-        $user = array_merge(['id' => $result->insertId], $userData);
-        return JSONResponse::response(200, [
-          "ok" => true,
-          "message" => "Usuario creado correctamente",
-          "user" => $user
-        ]);
-      }, function (Exception $e) {
-        return JSONResponse::response(500, [
-          "ok" => false,
-          "error" => "Error al crear el usuario: " . $e->getMessage()
-        ]);
-      });
+          // Si el usuario no existe, continúa con la creación
+          $hashedPassword = password_hash($userData['password'], PASSWORD_BCRYPT);
+
+          $updateData = [
+            $userData['username'],
+            $userData['email'],
+            $hashedPassword,
+            $userData['rol'],
+          ];
+
+          $createQuery = 'INSERT INTO usuario (nombre_usuario, correo, contrasena, id_rol) VALUES (?, ?, ?, ?)';
+
+          return $this->conn->query($createQuery, $updateData)->then(
+            function (QueryResult $result) use ($userData) {
+              $user = array_merge(['id' => $result->insertId], $userData);
+              return JSONResponse::response(200, [
+                "ok" => true,
+                "message" => "Usuario creado correctamente",
+                "user" => $user
+              ]);
+            },
+            function (Exception $e) {
+              return JSONResponse::response(500, [
+                "ok" => false,
+                "error" => "Error al crear el usuario: " . $e->getMessage()
+              ]);
+            }
+          );
+        }
+      );
     } catch (Exception $e) {
       return JSONResponse::response(500, [
         "ok" => false,
@@ -102,11 +128,10 @@ class UserController
 
   public function updateUserById(ServerRequestInterface $request, $id)
   {
-
     try {
-
       $body = $request->getBody()->getContents();
       $data = json_decode($body, true);
+
       UserValidation::validateData($data);
 
       $userData = [
@@ -114,47 +139,49 @@ class UserController
         'email' => $data['email'],
         'password' => $data['password'],
         'confirmPassword' => $data['confirmPassword'],
-        'role' => $data['role'] ? $data['role'] : 2 // Rol por defecto es 2 (Usuario)
+        'rol' => $data['rol'] ? $data['rol'] : 2
       ];
 
       UserValidation::validateConfirmPassword($userData['password'], $userData['confirmPassword']);
 
-      if ($this->userExists($userData['email'], $userData['username'])) {
-        return JSONResponse::response(400, [
-          "ok" => false,
-          "error" => "El usuario ingresado ya existe"
-        ]);
-      }
-
-      $hashedPassword = password_hash($userData['password'], PASSWORD_BCRYPT);
-
-      $updateData = [
-        $userData['username'],
-        $userData['email'],
-        $hashedPassword,
-        $userData['role'],
-        $id
-      ];
-
-      $updateQuery = 'UPDATE usuario SET nombre_usuario = ?, correo = ?, contrasena = ?, id_rol = ? WHERE id = ?'; 
-      $selectQueryValidation = 'SELECT id FROM usuario WHERE id = ?';
-
-      return $this->conn->query($selectQueryValidation, [$id])->then(function ($result) use ($updateQuery, $updateData) {
-        if (count($result->resultRows) === 0) {
-          return JSONResponse::response(404, ['ok' => false, 'error' => 'Licencia no encontrada']);
-        }
-        return $this->conn->query($updateQuery, $updateData)->then(function (QueryResult $result) {
-          if ($result->affectedRows > 0) {            
-            return JSONResponse::response(200, ['ok' => true, 'message' => 'usuario actualizado correctamente']);
-          } else {
-            return JSONResponse::response(404, ['ok' => false, 'error' => 'Licencia no encontrada']);
+      return $this->userExists($userData['email'], $userData['username'])->then(
+        function ($exists) use ($userData, $id) {
+          if ($exists === true) {
+            return JSONResponse::response(400, [
+              "ok" => false,
+              "error" => "El correo o usuario ingresado ya está en uso"
+            ]);
           }
-        }, function (Exception $e) {
-          return JSONResponse::response(500, ['ok' => false, 'error' => 'Error al actualizar la licencia: ' . $e->getMessage()]);
-        });
-      });
 
-      
+          $hashedPassword = password_hash($userData['password'], PASSWORD_BCRYPT);
+
+          $updateData = [
+            $userData['username'],
+            $userData['email'],
+            $hashedPassword,
+            $userData['rol'],
+            $id
+          ];
+
+          $updateQuery = 'UPDATE usuario SET nombre_usuario = ?, correo = ?, contrasena = ?, id_rol = ? WHERE id_usuario = ?';
+          $selectQueryValidation = 'SELECT id_usuario FROM usuario WHERE id_usuario = ?';
+
+          return $this->conn->query($selectQueryValidation, [$id])->then(function ($result) use ($updateQuery, $updateData) {
+            if (count($result->resultRows) === 0) {
+              return JSONResponse::response(404, ['ok' => false, 'error' => 'Usuario no encontrado']);
+            }
+            return $this->conn->query($updateQuery, $updateData)->then(function (QueryResult $result) {
+              if ($result->affectedRows > 0) {
+                return JSONResponse::response(200, ['ok' => true, 'message' => 'Usuario actualizado correctamente']);
+              } else {
+                return JSONResponse::response(404, ['ok' => false, 'error' => 'Usuario no encontrado']);
+              }
+            }, function (Exception $e) {
+              return JSONResponse::response(500, ['ok' => false, 'error' => 'Error al actualizar el usuario: ' . $e->getMessage()]);
+            });
+          });
+        }
+      );
     } catch (Exception $e) {
       return JSONResponse::response(500, [
         "ok" => false,

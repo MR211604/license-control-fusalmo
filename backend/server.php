@@ -4,9 +4,7 @@
 use FastRoute\DataGenerator\GroupCountBased;
 use FastRoute\RouteCollector;
 use FastRoute\RouteParser\Std;
-use Psr\Http\Message\ServerRequestInterface;
 use React\Http\HttpServer;
-use React\Http\Message\Response;
 use Sikei\React\Http\Middleware\CorsMiddleware;
 
 require 'vendor/autoload.php';
@@ -24,7 +22,7 @@ $authController = new AuthController($connection);
 
 //Authentication
 $r->addGroup('/auth', function (RouteCollector $r) use ($authController) {
-  $r->addRoute('POST', '/login',[$authController, 'login']);
+  $r->addRoute('POST', '/login', [$authController, 'login']);
 });
 
 //Licenses
@@ -37,7 +35,7 @@ $r->addGroup('/license', function (RouteCollector $r) use ($licenseController) {
 });
 
 //Users
-$r->addGroup('/users', function(RouteCollector $r) use ($userController) {
+$r->addGroup('/user', function (RouteCollector $r) use ($userController) {
   $r->addRoute('GET', '/getAll', [$userController, 'getUsers']);
   $r->addRoute('GET', '/{id:\d+}', [$userController, 'getUserById']);
   $r->addRoute('POST', '/create', [$userController, 'createUser']);
