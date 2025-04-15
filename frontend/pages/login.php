@@ -34,7 +34,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if($userData && isset($userData['user'])) {
       $_SESSION["user_id"] = $userData['user']['id'];
       $_SESSION["username"] = $userData['user']['username'];
-      $_SESSION["role_id"] = $userData['user']['role_id'];
+      $_SESSION["id_rol"] = $userData['user']['id_rol'];
 
       header("Location: index.php?page=home");
       exit();

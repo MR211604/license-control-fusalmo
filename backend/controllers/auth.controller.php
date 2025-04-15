@@ -54,7 +54,7 @@ class AuthController
           $userObj = [
             "id" => $user["id_usuario"],
             "username" => $user["nombre_usuario"],
-            "role_id" => $user["id_rol"]
+            "id_rol" => $user["id_rol"]
           ];
 
           return JSONResponse::response(200, [

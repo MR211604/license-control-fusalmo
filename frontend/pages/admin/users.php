@@ -1,6 +1,6 @@
 <?php
 
-if (!isset($_SESSION["role_id"]) || $_SESSION["role_id"] != 1) {
+if (!isset($_SESSION["id_rol"]) || $_SESSION["id_rol"] != 1) {
   header("Location: index.php?page=home");
   exit();
 }

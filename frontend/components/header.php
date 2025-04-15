@@ -15,7 +15,7 @@ if (isset($_GET['logout'])) {
 
       <a class="navbar-brand" href="./index.php">Inicio</a>
 
-      <?php if (isset($_SESSION['role_id']) && $_SESSION['role_id'] == 1): ?>
+      <?php if (isset($_SESSION['id_rol']) && $_SESSION['id_rol'] == 1): ?>
         <a class="navbar-brand" href="index.php?page=admin/users">Usuarios</a>
       <?php endif; ?>
 

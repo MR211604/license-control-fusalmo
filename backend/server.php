@@ -1,9 +1,9 @@
 <?php
 
-
 use FastRoute\DataGenerator\GroupCountBased;
 use FastRoute\RouteCollector;
 use FastRoute\RouteParser\Std;
+use Psr\Http\Message\ServerRequestInterface;
 use React\Http\HttpServer;
 use Sikei\React\Http\Middleware\CorsMiddleware;
 
@@ -13,12 +13,15 @@ require './lib/router.php';
 require './controllers/license.controller.php';
 require './controllers/users.controller.php';
 require './controllers/auth.controller.php';
+require './services/mail.php';
+
 
 $r = new RouteCollector(new Std(), new GroupCountBased());
 
 $licenseController = new LicenseController($connection);
 $userController = new UserController($connection);
 $authController = new AuthController($connection);
+$emailService = new SendEmail();
 
 //Authentication
 $r->addGroup('/auth', function (RouteCollector $r) use ($authController) {
@@ -41,6 +44,11 @@ $r->addGroup('/user', function (RouteCollector $r) use ($userController) {
   $r->addRoute('POST', '/create', [$userController, 'createUser']);
   $r->addRoute('PUT', '/update/{id:\d+}', [$userController, 'updateUserById']);
   // $r->addRoute('DELETE', '/delete/{id:\d+}', [$licenseController, 'delete']);
+});
+
+//Email sending
+$r->addGroup('/email', function (RouteCollector $r) use ($emailService) {
+  $r->addRoute('POST', '/send', [$emailService, 'sendEmail']);
 });
 
 
