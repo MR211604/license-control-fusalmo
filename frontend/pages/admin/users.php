@@ -11,7 +11,7 @@ $error_message = null;
 
 try {
   $ch = curl_init();
-  curl_setopt($ch, CURLOPT_URL, 'http://localhost:8080/license/getAll');
+  curl_setopt($ch, CURLOPT_URL, 'http://localhost:8080/user/getAll');
   curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
   curl_setopt($ch, CURLOPT_HTTPHEADER, [
     'Content-Type: application/json',
@@ -39,7 +39,6 @@ try {
 
 ?>
 
-
 <article>
   <div class="container text-center">
     <h1>Listado de usuarios</h1>
@@ -50,7 +49,7 @@ try {
 <div class="container">
   <div class="row">
     <div class="col-md-6">
-      <form method="POST" enctype="multipart/form-data">
+      <form method="POST">
         <div class="form-group">
           <label for="user_id">ID: </label>
           <input type="text" required class="form-control" id="user_id" name="user_id" placeholder="user_id">
@@ -73,19 +72,15 @@ try {
             <option value="2">Usuario</option>
           </select>
         </div>
-
-        <button type="submit" class="btn btn-primary">Crear usuario</button>
-
+        <button type="submit" class="btn btn-primary mt-2 mb-4">Crear usuario</button>
       </form>
     </div>
-
   </div>
 </div>
 
 
-<!-- Tablas -->
-
-<div class="container">
+<!-- Tabla de usuarios -->
+<div class="container mt-2">
   <div class="row">
     <div class="col-md-12">
       <table class="table table-bordered table-light">
@@ -105,13 +100,19 @@ try {
               <td><?php echo htmlspecialchars($user['id_usuario'] ?? '') ?></td>
               <td><?php echo htmlspecialchars($user['nombre_usuario'] ?? '') ?></td>
               <td><?php echo htmlspecialchars($user['contrasena' ?? '']) ?></td>
-              <td><?php echo htmlspecialchars($user['id_rol'] ?? '') ?></td>
+              <td><?php echo htmlspecialchars($user['id_rol'] === "1" ? 'Administrador' : 'Usuario') ?></td>
 
               <td>
                 <form method="POST">
                   <input type="hidden" name="user_id" id="user_id" value="<?php echo $user['id_usuario'] ?>">
-                  <button type="submit" class="btn btn-danger">Eliminar</button>
-
+                  <div class="d-flex justify-content-center align-items-center" style="gap: 10px;">
+                    <button type="submit" class="btn btn-danger">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                    <button type="submit" name="action_editar" value="Edit" class="btn btn-warning text-white">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                  </div>
                 </form>
             </tr>
 

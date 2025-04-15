@@ -7,8 +7,6 @@ if (!isset($_SESSION["user_id"])) {
   exit();
 }
 
-
-
 // Obtener las licencias desde la API
 $licenses = [];
 $error_message = null;
@@ -46,6 +44,58 @@ try {
 }
 
 
+if ($_SERVER['REQUEST_METHOD'] == "POST") {
+  // 'plataforma' => $data['plataforma'],
+  //       'correo' => $data['correo'],
+  //       'contrasena' => $data['contrasena'],
+  //       'fechaDeCompra' => $data['fechaDeCompra'],
+  //       'fechaDeSuspension' => $data['fechaDeSuspension'],
+  //       'fechaDeRenovacion' => $data['fechaDeRenovacion'],
+  //       'fechaDeVencimiento' => $data['fechaDeVencimiento']
+  $data = [
+    'plataforma' => $_POST['platform'],
+    'correo' => $_POST['email'],
+    'contrasena' => $_POST['password'],
+    'fechaDeCompra' => $_POST['buy_date'],
+    //Sumarle a la fecha de compra 1 año
+    'fechaDeSuspension' => $_POST['buy_date'] + 365 * 24 * 60 * 60,
+    'fechaDeRenovacion' => $_POST['renovation_date'],
+    'fechaDeVencimiento' => $_POST['expire_date']
+  ];
+
+  $ch = curl_init();
+  curl_setopt($ch, CURLOPT_URL, 'http://localhost:8080/license/create');
+  curl_setopt($ch, CURLOPT_POST, 1);
+  curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+  curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    'Content-Type: application/json',
+  ]);
+
+  $response = curl_exec($ch);
+  $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+  curl_close($ch);
+
+  if ($httpCode == 200) {
+
+    //Agregar al arreglo de licencias
+    $responseData = json_decode($response, true);
+    if ($responseData && isset($responseData['licencia'])) {
+      $licenses[] = $responseData['licencia'];
+    } else {
+      $error_message = "Error al obtener los datos de la licencia.";
+    }
+  } else {
+    $responseData = json_decode($response, true);
+    if ($responseData && isset($responseData['error'])) {
+      $error_message = $responseData['error'];
+    } else {
+      $error_message = "Error desconocido al agregar la licencia.";
+    }
+  }
+}
+
+
 ?>
 
 <!-- Titulo -->
@@ -62,9 +112,9 @@ try {
 <?php endif; ?>
 
 <div class="container">
-  <div class="row">
-    <div class="col-md-6">
-      <form action="">
+  <form method="POST" class="mt-3">
+    <div class="row">
+      <div class="col-6">
         <div class="form-group">
           <label for="license_id">ID: </label>
           <input type="text" class="form-control" id="license_id" name="license_id" placeholder="license_id">
@@ -75,34 +125,42 @@ try {
         </div>
         <div class="form-group">
           <label for="email">Correo: </label>
-          <input type="text" class="form-control" id="email" name="email" placeholder="email">
+          <input type="text" class="form-control" id="email" name="email" placeholder="email@example.com">
         </div>
         <div class="form-group">
           <label for="password">Contraseña: </label>
-          <input type="password" class="form-control" id="password" name="password" placeholder="password">
+          <input type="password" class="form-control" id="password" name="password">
         </div>
-
+      </div>
+      <div class="col-6">
         <div class="form-row">
           <label for="buy_date">Fecha de compra: </label>
           <input type="date" class="form-control" id="buy_date" name="buy_date" placeholder="buy_date">
         </div>
 
         <div class="form-row">
-          <label for="cease_date">Fecha de suspension: </label>
-          <input type="date" class="form-control" id="cease_date" name="cease_date" placeholder="cease_date">
+          <label for="renovation_date">Fecha de renovacion: </label>
+          <input type="date" class="form-control" id="renovation_date" name="renovation_date" placeholder="renovation_date">
         </div>
 
         <div class="form-row">
           <label for="expire_date">Fecha de vencimiento: </label>
           <input type="date" class="form-control" id="expire_date" name="expire_date" placeholder="expire_date">
         </div>
+      </div>
+      <div class="row">
+        <div class="col-12 mt-3 d-flex justify-content-center align-items-center" style="gap: 10px;">
+          <button type="submit" class="btn btn-primary">Agregar nueva licencia</button>
+        </div>
+      </div>
 
-      </form>
-    </div>
-  </div>
+  </form>
 
-  <!-- Tabla de licencias -->
-  <table class="table table-bordered table-light">
+</div>
+
+<!-- Tabla de licencias -->
+<div class="table-responsive">
+  <table class="mt-3 table table-bordered table-light">
     <thead class="table-active">
       <tr>
         <th>ID</th>
@@ -112,6 +170,7 @@ try {
         <th>Fecha de compra</th>
         <th>Fecha de suspension</th>
         <th>Fecha de vencimiento</th>
+        <th>Opciones</th>
       </tr>
     </thead>
     <tbody>
@@ -132,8 +191,17 @@ try {
             <td>
               <form method="post">
                 <input type="hidden" name="license_id" value="<?php echo htmlspecialchars($license['id'] ?? ''); ?>" />
-                <input type="submit" name="accion" value="Enviar correo" class="btn btn-primary" />
-                <input type="submit" name="accion" value="Borrar" class="btn btn-danger" />
+                <div class="d-flex justify-content-center align-items-center" style="gap: 10px;">
+                  <button type="submit" name="action_send_email" value="SendEmail" class="btn btn-primary">
+                    <i class="bi bi-envelope"></i>
+                  </button>
+                  <button type="submit" name="action_delete" value="Delete" class="btn btn-danger">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                  <button type="submit" name="action_editar" value="Edit" class="btn btn-warning text-white">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                </div>
               </form>
             </td>
           </tr>
@@ -141,4 +209,6 @@ try {
       <?php endif; ?>
     </tbody>
   </table>
+</div>
+
 </div>

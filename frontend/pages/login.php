@@ -9,7 +9,6 @@ if (isset($_SESSION["user_id"])) {
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
   //Haciendo la peticion HTTP hacia /auth/login
-
   $data = [
     'username' => $_POST['username'],
     'password' => $_POST['password']
