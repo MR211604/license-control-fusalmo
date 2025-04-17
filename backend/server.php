@@ -34,11 +34,12 @@ $r->addGroup('/license', function (RouteCollector $r) use ($licenseController) {
   $r->addRoute('GET', '/{id:\d+}', [$licenseController, 'getLicenseById']);
   $r->addRoute('POST', '/create', [$licenseController, 'createLicense']);
   $r->addRoute('PUT', '/update/{id:\d+}', [$licenseController, 'updateLicenseById']);
-  $r->addRoute('DELETE', '/delete/{id:\d+}', [$licenseController, 'delete']);
+  $r->addRoute('POST', '/renovate/{id:\d+}', [$licenseController, 'renovateLicenseById']);
+  $r->addRoute('POST', '/suspend/{id:\d+}', [$licenseController, 'suspendLicenseById']);
 });
 
 //Users
-$r->addGroup('/user', function (RouteCollector $r) use ($userController) {
+$r->addGroup('/user', function (RouteCollector $r) use ($userController) {  
   $r->addRoute('GET', '/getAll', [$userController, 'getUsers']);
   $r->addRoute('GET', '/{id:\d+}', [$userController, 'getUserById']);
   $r->addRoute('POST', '/create', [$userController, 'createUser']);

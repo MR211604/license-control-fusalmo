@@ -142,30 +142,30 @@ class UserController
         'rol' => $data['rol'] ? $data['rol'] : 2
       ];
 
+
+      $hashedPassword = password_hash($userData['password'], PASSWORD_BCRYPT);
+
+      $updateData = [
+        $userData['username'],
+        $userData['email'],
+        $hashedPassword,
+        $userData['rol'],
+        $id
+      ];
+
+      $updateQuery = 'UPDATE usuario SET nombre_usuario = ?, correo = ?, contrasena = ?, id_rol = ? WHERE id_usuario = ?';
+      $selectQueryValidation = 'SELECT id_usuario FROM usuario WHERE id_usuario = ?';
+
       UserValidation::validateConfirmPassword($userData['password'], $userData['confirmPassword']);
 
       return $this->userExists($userData['email'], $userData['username'])->then(
-        function ($exists) use ($userData, $id) {
+        function ($exists) use ($id, $updateQuery, $updateData, $selectQueryValidation) {
           if ($exists === true) {
             return JSONResponse::response(400, [
               "ok" => false,
               "error" => "El correo o usuario ingresado ya está en uso"
             ]);
           }
-
-          $hashedPassword = password_hash($userData['password'], PASSWORD_BCRYPT);
-
-          $updateData = [
-            $userData['username'],
-            $userData['email'],
-            $hashedPassword,
-            $userData['rol'],
-            $id
-          ];
-
-          $updateQuery = 'UPDATE usuario SET nombre_usuario = ?, correo = ?, contrasena = ?, id_rol = ? WHERE id_usuario = ?';
-          $selectQueryValidation = 'SELECT id_usuario FROM usuario WHERE id_usuario = ?';
-
           return $this->conn->query($selectQueryValidation, [$id])->then(function ($result) use ($updateQuery, $updateData) {
             if (count($result->resultRows) === 0) {
               return JSONResponse::response(404, ['ok' => false, 'error' => 'Usuario no encontrado']);
