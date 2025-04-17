@@ -8,6 +8,7 @@ if (!isset($_SESSION["id_rol"]) || $_SESSION["id_rol"] != 1) {
 // Obtener los usuarios desde la API
 $usuarios = [];
 $error_message = null;
+$success_message = null;
 
 try {
   $ch = curl_init();
@@ -37,11 +38,15 @@ try {
   $error_message = "Error en la conexión: " . $e->getMessage();
 }
 
+if (isset($_GET['createSuccess']) && $_GET['createSuccess'] === 'true') {
+  $success_message = "Usuario creado exitosamente";
+}
+
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
   $data = [
     'username' => $_POST['username'],
-    'email' => $_POST['password'],
+    'email' => $_POST['email'],
     'password' => $_POST['password'],
     'confirmPassword' => $_POST['confirmPassword'],
     'rol' => $_POST['rol']
@@ -65,8 +70,10 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
     $responseData = json_decode($response, true);
     if ($responseData && isset($responseData['user'])) {
       $usuarios[] = $responseData['user'];
+      header("Location: index.php?page=admin/users&createSuccess=true");
+      exit();
     } else {
-      $error_message = "Errror al obtener datos del usuario.";
+      $error_message = "Error al obtener datos del usuario.";
     }
   } else {
     $responseData = json_decode($response, true);
@@ -86,10 +93,17 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
   </div>
 </article>
 
+<?php if ($success_message): ?>
+  <div class="alert alert-success alert-dismissible fade show">
+    <?php echo htmlspecialchars($success_message); ?>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+<?php endif; ?>
 
 <?php if ($error_message): ?>
-  <div class="alert alert-danger">
+  <div class="alert alert-danger alert-dismissible fade show">
     <?php echo htmlspecialchars($error_message); ?>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
   </div>
 <?php endif; ?>
 
@@ -100,6 +114,11 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         <div class="form-group mb-3">
           <label for="username">Nombre: </label>
           <input type="text" class="form-control" id="username" name="username" placeholder="username">
+        </div>
+
+        <div class="form-group mb-3">
+          <label for="username">Correo: </label>
+          <input type="email" class="form-control" id="email" name="email" placeholder="email@example.com">
         </div>
 
         <div class="form-group mb-3">
