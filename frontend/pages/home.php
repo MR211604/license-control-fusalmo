@@ -13,8 +13,12 @@ $error_message = null;
 $success_message = null;
 
 // Verificar si hay un mensaje de éxito en la URL
-if (isset($_GET['success']) && $_GET['success'] === 'true') {
+if (isset($_GET['editSucess']) && $_GET['editSucess'] === 'true') {
   $success_message = "Licencia actualizada correctamente";
+}
+
+if (isset($_GET['createSuccess']) && $_GET['createSuccess'] === 'true') {
+  $success_message = "Licencia creada correctamente";
 }
 
 // *Cargando las licencias desde la API*
@@ -66,12 +70,47 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
       'correo' => $_POST['email'],
       'contrasena' => $_POST['password'],
       'fechaDeCompra' => $_POST['buy_date'],
-      'fechaDeRenovacion' => $_POST['renovation_date'] ? $_POST['renovation_date'] : null,
-      'fechaDeVencimiento' => $_POST['expire_date'] ? $_POST['expire_date'] : null,
+      'fechaDeRenovacion' => null,
+      'fechaDeVencimiento' => $_POST['expire_date'],
+      'fechaDeSuspension' =>  null,
+      'id_usuario' =>  $_SESSION["user_id"]
     ];
-    echo 'info que se envia' . json_encode($data);
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, 'http://localhost:8080/license/create');
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+      'Content-Type: application/json',
+    ]);
+
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($httpCode == 200) {
+      $responseData = json_decode($response, true);
+      if ($responseData && isset($responseData['licencia'])) {
+        $licenses[] = $responseData['licencia'];
+        header("Location: index.php?page=home&createSuccess=true");
+        exit();
+      } else {
+        $error_message = "Error al obtener datos de la licencia.";
+      }
+    } else {
+      $responseData = json_decode($response, true);
+      if ($responseData && isset($responseData['error'])) {
+        $error_message = $responseData['error'];
+      } else {
+        $error_message = "Error desconocido al crear la licencia.";
+      }
+    }
   }
 }
+
+
+//TODO: SEPARAR LOGICA DE FUNCIONES EN ARCHIVOS SEPARADOS
 
 /**
  * Función para renovar la fecha de una licencia
@@ -97,7 +136,7 @@ function renovateLicense($licenseId)
 
     if ($updateHttpCode == 200) {
       // Pasar el mensaje de éxito como parámetro en la URL
-      header("Location: index.php?page=home&success=true");
+      header("Location: index.php?page=home&editSucess=true");
       exit();
     } else {
       $updateData = json_decode($updateResponse, true);
@@ -132,7 +171,7 @@ function suspendLicense($licenseId)
 
     if ($updateHttpCode == 200) {
       // Pasar el mensaje de éxito como parámetro en la URL
-      header("Location: index.php?page=home&success=true");
+      header("Location: index.php?page=home&editSucess=true");
       exit();
     } else {
       $updateData = json_decode($updateResponse, true);
@@ -153,14 +192,16 @@ function suspendLicense($licenseId)
 <!-- Formulario de licencias -->
 
 <?php if ($success_message): ?>
-  <div class="alert alert-success">
+  <div class="alert alert-success alert-dismissible fade show">
     <?php echo htmlspecialchars($success_message); ?>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
   </div>
 <?php endif; ?>
 
 <?php if ($error_message): ?>
-  <div class="alert alert-danger">
+  <div class="alert alert-danger alert-dismissible fade show">
     <?php echo htmlspecialchars($error_message); ?>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
   </div>
 <?php endif; ?>
 
@@ -174,7 +215,7 @@ function suspendLicense($licenseId)
         </div>
         <div class="form-group mb-3">
           <label for="email">Correo: </label>
-          <input type="text" class="form-control" id="email" name="email" placeholder="email@example.com">
+          <input type="email" class="form-control" id="email" name="email" placeholder="email@example.com">
         </div>
         <div class="form-group mb-3">
           <label for="password">Contraseña: </label>
@@ -263,5 +304,4 @@ function suspendLicense($licenseId)
     </tbody>
   </table>
 </div>
-
 </div>

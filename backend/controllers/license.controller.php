@@ -78,19 +78,21 @@ class LicenseController
 
       $body = $request->getBody()->getContents();
       $data = json_decode($body, true);
-      LicenseValidation::validateData($data);
-
+     
       $licenseData = [
         'plataforma' => $data['plataforma'],
         'correo' => $data['correo'],
         'contrasena' => $data['contrasena'],
         'fechaDeCompra' => $data['fechaDeCompra'],
-        'fechaDeSuspension' => $data['fechaDeSuspension'] ? $data['fechaDeSuspension'] : null,
-        'fechaDeRenovacion' => $data['fechaDeRenovacion'] ? $data['fechaDeRenovacion'] : null,
-        'fechaDeVencimiento' => $data['fechaDeVencimiento']
+        'fechaDeVencimiento' => $data['fechaDeVencimiento'],
+        'fechaDeSuspension' => isset($data['fechaDeSuspension']) ? $data['fechaDeSuspension'] : null,
+        'fechaDeRenovacion' => isset($data['fechaDeRenovacion']) ? $data['fechaDeRenovacion'] : null,
+        'id_usuario' => $data['id_usuario'],
       ];
 
-      $insertQuery = 'INSERT INTO licencias (plataforma, correo, contrasena, fecha_de_compra, fecha_de_suspension, fecha_de_renovacion, fecha_de_vencimiento) VALUES (?, ?, ?, ?, ?, ?, ?)';
+      LicenseValidation::validateData($licenseData);
+
+      $insertQuery = 'INSERT INTO licencias (plataforma, correo, contrasena, fecha_de_compra, fecha_de_vencimiento, fecha_de_suspension, fecha_de_renovacion, id_usuario) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
       $params = array_values($licenseData);
 
       return $this->licenseExists($licenseData['correo'])->then(function ($exists) use ($licenseData, $insertQuery, $params) {
@@ -117,20 +119,22 @@ class LicenseController
     try {
       $body = $request->getBody()->getContents();
       $data = json_decode($body, true);
-      LicenseValidation::validateData($data);
-
+      
       $licenseData = [
         'plataforma' => $data['plataforma'],
         'correo' => $data['correo'],
         'contrasena' => $data['contrasena'],
         'fechaDeCompra' => $data['fechaDeCompra'],
-        'fechaDeSuspension' => $data['fechaDeSuspension'],
-        'fechaDeRenovacion' => $data['fechaDeRenovacion'],
-        'fechaDeVencimiento' => $data['fechaDeVencimiento']
+        'fechaDeVencimiento' => $data['fechaDeVencimiento'],
+        'fechaDeRenovacion' => isset($data['fechaDeRenovacion']) ? $data['fechaDeRenovacion'] : null,
+        'fechaDeSuspension' => isset($data['fechaDeSuspension']) ? $data['fechaDeSuspension'] : null,
+        'id_usuario' => $data['id_usuario'],
       ];
+      
+      LicenseValidation::validateData($licenseData);
 
       $selectQueryValidation = 'SELECT id FROM licencias WHERE id = ?';
-      $updateQuery = 'UPDATE licencias SET plataforma = ?, correo = ?, contrasena = ?, fecha_de_compra = ?, fecha_de_suspension = ?, fecha_de_renovacion = ?, fecha_de_vencimiento = ? WHERE id = ?';
+      $updateQuery = 'UPDATE licencias SET plataforma = ?, correo = ?, contrasena = ?, fecha_de_compra = ?, fecha_de_vencimiento = ?, fecha_de_renovacion = ?, fecha_de_suspension = ?, id_usuario = ? WHERE id = ?';
 
       $params = array_values($licenseData);
 

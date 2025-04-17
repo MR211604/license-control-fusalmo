@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
     $responseData = json_decode($response, true);
     if ($responseData && isset($responseData['user'])) {
-      $licenses[] = $responseData['user'];
+      $usuarios[] = $responseData['user'];
     } else {
       $error_message = "Errror al obtener datos del usuario.";
     }

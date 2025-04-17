@@ -3,7 +3,6 @@
 use FastRoute\DataGenerator\GroupCountBased;
 use FastRoute\RouteCollector;
 use FastRoute\RouteParser\Std;
-use Psr\Http\Message\ServerRequestInterface;
 use React\Http\HttpServer;
 use Sikei\React\Http\Middleware\CorsMiddleware;
 
