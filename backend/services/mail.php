@@ -33,13 +33,6 @@ class SendEmail
       ]);
     }
 
-    if(empty($data['name'])) {
-      return JSONResponse::response(400, [
-        "ok" => false,
-        "message" => "No se recibió el nombre del correo."
-      ]);
-    }
-
     if(empty($data['subject'])) {
       return JSONResponse::response(400, [
         "ok" => false,
@@ -68,7 +61,7 @@ class SendEmail
 
       //Recipients
       $mail->setFrom($_ENV['MAIL_USERNAME'], $_ENV['MAIL_FROM_NAME']); //El nombre puede ser cualquiera en realidad
-      $mail->addAddress($data['email'], $data['name']);               //Add a recipient
+      $mail->addAddress($data['email']);               //Add a recipient
       //$mail->addCC('cc@example.com');
       //$mail->addBCC('bcc@example.com');
 

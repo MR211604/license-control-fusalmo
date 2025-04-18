@@ -160,6 +160,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
             <th>Nombre</th>
             <th>Correo</th>
             <th>Rol</th>
+            <th>Estado</th>
             <th>Acciones</th>
           </tr>
         </thead>
@@ -171,22 +172,33 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
               <td><?php echo htmlspecialchars($user['nombre_usuario'] ?? '') ?></td>
               <td><?php echo htmlspecialchars($user['correo'] ?? '') ?></td>
               <td><?php echo htmlspecialchars($user['id_rol'] === "1" ? 'Administrador' : 'Usuario') ?></td>
+              <td>
+                <?php if ($user['active'] == 1): ?>
+                  <span class="badge text-bg-success">Activo</span>
+                <?php else: ?>
+                  <span class="badge text-bg-danger">Deshabilitado</span>
+                <?php endif; ?>
+              </td>
 
               <td>
                 <form method="POST">
                   <input type="hidden" name="user_id" id="user_id" value="<?php echo $user['id_usuario'] ?>">
                   <div class="d-flex justify-content-center align-items-center" style="gap: 10px;">
-                    <button type="submit" class="btn btn-danger disabled">
-                      <i class="bi bi-trash"></i>
-                    </button>
-                    
-                    <a href="index.php?page=admin/editUser&id=<?php echo htmlspecialchars($user['id_usuario'] ?? ''); ?>" class="btn btn-warning text-white">
+
+                    <?php if ($user['active'] == 1): ?>
+                      <button type="submit" class="btn btn-danger" value="action_disable_user" value="DisableUser" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Deshabilitar usuario">
+                        <i class="bi bi-person-dash"></i>
+                      </button>
+                    <?php else: ?>
+                      <button type="submit" class="btn btn-primary text-white" name="action_enable_user" value="EnableUser" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Reactivar usuario">
+                      <i class="bi bi-arrow-clockwise"></i>
+                      </button>
+                    <?php endif; ?>
+
+                    <a href="index.php?page=admin/editUser&id=<?php echo htmlspecialchars($user['id_usuario'] ?? ''); ?>" class="btn btn-warning text-white" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Editar usuario">
                       <i class="bi bi-pencil"></i>
                     </a>
 
-                    <!-- <button type="submit" name="action_editar" value="Edit" class="btn btn-warning text-white">
-                      <i class="bi bi-pencil"></i>
-                    </button> -->
                   </div>
                 </form>
             </tr>

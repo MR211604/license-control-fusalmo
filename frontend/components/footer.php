@@ -1,13 +1,21 @@
 <footer>
-<div class="container">
-  <p>&copy; <?php echo date("Y"); ?> FUSALMO. All rights reserved.</p>
-  <ul class="social-media">
-    <li><a href="https://www.facebook.com/FUSALMO" target="_blank">Facebook</a></li>
-    <li><a href="https://www.instagram.com/FUSALMO" target="_blank">Instagram</a></li>
-    <li><a href="https://fusalmo.org/" target="_blank">Sitio web</a></li>
-  </ul>
-</div>
+  <div class="container">
+    <p>&copy; <?php echo date("Y"); ?> FUSALMO. All rights reserved.</p>
+    <ul class="social-media">
+      <li><a href="https://www.facebook.com/FUSALMO" target="_blank">Facebook</a></li>
+      <li><a href="https://www.instagram.com/FUSALMO" target="_blank">Instagram</a></li>
+      <li><a href="https://fusalmo.org/" target="_blank">Sitio web</a></li>
+    </ul>
+  </div>
 </footer>
+
+<script>
+  // Inicializar todos los tooltips en la página
+  document.addEventListener('DOMContentLoaded', function() {
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+  });
+</script>
 
 <style>
   footer {

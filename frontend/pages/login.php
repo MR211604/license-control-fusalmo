@@ -42,8 +42,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
   } else {
     $responseData = json_decode($response, true);
-    if($responseData && isset($responseData['message'])) {
-      $error_message = $responseData['message'];
+    if($responseData && isset($responseData['error'])) {
+      $error_message = $responseData['error'];
     } else {
       $error_message = "Error desconocido al iniciar sesión.";
     }    
