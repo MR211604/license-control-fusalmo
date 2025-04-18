@@ -55,6 +55,15 @@ class UserController
     });
   }
 
+  public function userExistsUpdate($email, $username, $id)
+  {
+    return $this->conn->query('SELECT * FROM usuario WHERE (correo = ? OR nombre_usuario = ?) AND id_usuario != ?', [$email, $username, $id])->then(function ($result) {
+      return count($result->resultRows) > 0;
+    }, function (Exception $e) {
+      return JSONResponse::response(500, ['ok' => false, 'error' => 'Error al verificar la existencia del usuario: ' . $e->getMessage()]);
+    });
+  }
+
   //Por defecto, un usuario se crea con roles de usuario.
   public function createUser(ServerRequestInterface $request)
   {
@@ -158,7 +167,7 @@ class UserController
 
       UserValidation::validateConfirmPassword($userData['password'], $userData['confirmPassword']);
 
-      return $this->userExists($userData['email'], $userData['username'])->then(
+      return $this->userExistsUpdate($userData['email'], $userData['username'], $id)->then(
         function ($exists) use ($id, $updateQuery, $updateData, $selectQueryValidation) {
           if ($exists === true) {
             return JSONResponse::response(400, [

@@ -285,9 +285,9 @@ function suspendLicense($licenseId)
                     <button type="submit" name="action_send_email" value="SendEmail" class="btn btn-primary">
                       <i class="bi bi-envelope"></i>
                     </button>
-                    <button type="submit" name="action_editar" value="Edit" class="btn btn-warning text-white">
+                    <a href="index.php?page=licenses/editLicense&id=<?php echo htmlspecialchars($license['id'] ?? ''); ?>" class="btn btn-warning text-white">
                       <i class="bi bi-pencil"></i>
-                    </button>
+                    </a>
                     <button type="submit" name="action_suspend" value="Suspend" class="btn btn-danger">
                       <i class="bi bi-x-circle"></i>
                     </button>

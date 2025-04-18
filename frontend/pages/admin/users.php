@@ -42,6 +42,10 @@ if (isset($_GET['createSuccess']) && $_GET['createSuccess'] === 'true') {
   $success_message = "Usuario creado exitosamente";
 }
 
+if (isset($_GET['editSucess']) && $_GET['editSucess'] === 'true') {
+  $success_message = "Usuario actualizado exitosamente";
+}
+
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
   $data = [
@@ -148,13 +152,13 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 <!-- Tabla de usuarios -->
 <div class="container mt-2">
   <div class="row">
-    <div class="col-md-12">
+    <div class="table-responsive">
       <table class="table table-bordered table-light">
         <thead class="table-active">
           <tr>
             <th>ID</th>
             <th>Nombre</th>
-            <th>Contraseña</th>
+            <th>Correo</th>
             <th>Rol</th>
             <th>Acciones</th>
           </tr>
@@ -165,19 +169,24 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
             <tr>
               <td><?php echo htmlspecialchars($user['id_usuario'] ?? '') ?></td>
               <td><?php echo htmlspecialchars($user['nombre_usuario'] ?? '') ?></td>
-              <td><?php echo htmlspecialchars($user['contrasena' ?? '']) ?></td>
+              <td><?php echo htmlspecialchars($user['correo'] ?? '') ?></td>
               <td><?php echo htmlspecialchars($user['id_rol'] === "1" ? 'Administrador' : 'Usuario') ?></td>
 
               <td>
                 <form method="POST">
                   <input type="hidden" name="user_id" id="user_id" value="<?php echo $user['id_usuario'] ?>">
                   <div class="d-flex justify-content-center align-items-center" style="gap: 10px;">
-                    <button type="submit" class="btn btn-danger">
+                    <button type="submit" class="btn btn-danger disabled">
                       <i class="bi bi-trash"></i>
                     </button>
-                    <button type="submit" name="action_editar" value="Edit" class="btn btn-warning text-white">
+                    
+                    <a href="index.php?page=admin/editUser&id=<?php echo htmlspecialchars($user['id_usuario'] ?? ''); ?>" class="btn btn-warning text-white">
                       <i class="bi bi-pencil"></i>
-                    </button>
+                    </a>
+
+                    <!-- <button type="submit" name="action_editar" value="Edit" class="btn btn-warning text-white">
+                      <i class="bi bi-pencil"></i>
+                    </button> -->
                   </div>
                 </form>
             </tr>
