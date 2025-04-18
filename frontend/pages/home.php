@@ -1,5 +1,10 @@
 <?php
 
+
+require __DIR__ . '/../utils/license-helpers.php';
+require __DIR__ . '/../utils/email-helpers.php';
+
+
 // Verificar si el usuario está autenticado
 if (!isset($_SESSION["user_id"])) {
   // Redirigir usando el parámetro page en lugar de cambiar la URL completa
@@ -112,165 +117,6 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
       } else {
         $error_message = "Error desconocido al crear la licencia.";
       }
-    }
-  }
-}
-
-
-//TODO: SEPARAR LOGICA DE FUNCIONES EN ARCHIVOS SEPARADOS
-
-/**
- * Función para renovar la fecha de una licencia
- * @param int $licenseId ID de la licencia a renovar
- */
-function renovateLicense($licenseId)
-{
-  global $error_message;
-
-  // Obtener primero la licencia actual para mantener todos sus datos
-  try {
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, "http://localhost:8080/license/renovate/{$licenseId}");
-    curl_setopt($ch, CURLOPT_POST, 1);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-      'Content-Type: application/json',
-    ]);
-
-    $updateResponse = curl_exec($ch);
-    $updateHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-
-    if ($updateHttpCode == 200) {
-      // Pasar el mensaje de éxito como parámetro en la URL
-      header("Location: index.php?page=home&editSucess=true");
-      exit();
-    } else {
-      $updateData = json_decode($updateResponse, true);
-      $error_message = isset($updateData['error']) ? $updateData['error'] : "Error al renovar la licencia. Código: {$updateHttpCode}";
-    }
-  } catch (Exception $e) {
-    $error_message = "Error en la conexión: " . $e->getMessage();
-  }
-}
-
-/**
- * Función para suspender la fecha de una licencia
- * @param int $licenseId ID de la licencia a suspender
- */
-function suspendLicense($licenseId)
-{
-  global $error_message;
-
-  // Obtener primero la licencia actual para mantener todos sus datos
-  try {
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, "http://localhost:8080/license/suspend/{$licenseId}");
-    curl_setopt($ch, CURLOPT_POST, 1);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-      'Content-Type: application/json',
-    ]);
-
-    $updateResponse = curl_exec($ch);
-    $updateHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-
-    if ($updateHttpCode == 200) {
-      // Pasar el mensaje de éxito como parámetro en la URL
-      header("Location: index.php?page=home&editSucess=true");
-      exit();
-    } else {
-      $updateData = json_decode($updateResponse, true);
-      $error_message = isset($updateData['error']) ? $updateData['error'] : "Error al suspender la licencia. Código: {$updateHttpCode}";
-    }
-  } catch (Exception $e) {
-    $error_message = "Error en la conexión: " . $e->getMessage();
-  }
-}
-
-
-/**
- * Función para suspender la fecha de una licencia
- * @param int $licenseId ID de la licencia a suspender
- */
-function sendEmail($licenseId)
-{
-
-  //*Primero obtenemos la licencia
-  try {
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, "http://localhost:8080/license/{$licenseId}");
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-      'Content-Type: application/json',
-    ]);
-
-    $response = curl_exec($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-
-    if ($httpCode == 200) {
-      $licenseData = json_decode($response, true);
-      if ($licenseData && isset($licenseData['licencia'])) {
-        $license = $licenseData['licencia'];
-        sendEmailFunction($license['correo'], "INVITACION A FUSALMO VISUAL PARTY", "TE HACEMOS LA INVITACION A FUSALMO VISUAL PARTY");
-      } else {
-        throw new Exception("Error al obtener datos de la licencia.");
-      }
-    } else {
-      throw new Exception("Error al obtener la licencia. Código: {$httpCode}");
-    }
-  } catch (Exception $e) {
-    global $error_message;
-    $error_message = "Error en la conexión: " . $e->getMessage();
-  }
-}
-
-// {
-//   "email":"mirandarodriguezleofernando@gmail.com",
-//   "subject": "Tercer test",
-//   "messageBody":"esto es un terceeer test <b>yippy</b>."
-// }
-function sendEmailFunction($email, $subject, $messageBody)
-{
-
-  global $error_message;
-
-  //Llamaremos a la API de envio de correos
-  $data = [
-    'email' => $email,    
-    'subject' => $subject,
-    'messageBody' => $messageBody
-  ];
-
-  $ch = curl_init();
-  curl_setopt($ch, CURLOPT_URL, 'http://localhost:8080/email/send');
-  curl_setopt($ch, CURLOPT_POST, 1);
-  curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-  curl_setopt($ch, CURLOPT_HTTPHEADER, [
-    'Content-Type: application/json',
-  ]);
-
-  $response = curl_exec($ch);
-  $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-  curl_close($ch);
-
-  if ($httpCode == 200) {
-    $responseData = json_decode($response, true);
-    if ($responseData && isset($responseData['ok']) && $responseData['ok'] === true) {
-      header("Location: index.php?page=home&sendEmail=true");
-      exit();
-    } else {
-      $error_message = "Error al enviar el correo.";
-    }
-  } else {
-    $responseData = json_decode($response, true);
-    if ($responseData && isset($responseData['error'])) {
-      $error_message = $responseData['error'];
-    } else {
-      $error_message = "Error desconocido al enviar el correo.";
     }
   }
 }
