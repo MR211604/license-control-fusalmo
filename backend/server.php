@@ -43,7 +43,9 @@ $r->addGroup('/user', function (RouteCollector $r) use ($userController) {
   $r->addRoute('GET', '/{id:\d+}', [$userController, 'getUserById']);
   $r->addRoute('POST', '/create', [$userController, 'createUser']);
   $r->addRoute('PUT', '/update/{id:\d+}', [$userController, 'updateUserById']);
-  // $r->addRoute('DELETE', '/delete/{id:\d+}', [$licenseController, 'delete']);
+  $r->addRoute('POST', '/disable/{id:\d+}', [$userController, 'disableUser']);
+  $r->addRoute('POST', '/enable/{id:\d+}', [$userController, 'enableUser']);
+  
 });
 
 //Email sending

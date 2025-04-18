@@ -46,46 +46,115 @@ if (isset($_GET['editSucess']) && $_GET['editSucess'] === 'true') {
   $success_message = "Usuario actualizado exitosamente";
 }
 
+if (isset($_GET['enableSuccess']) && $_GET['enableSuccess'] === 'true') {
+  $success_message = "Usuario activado exitosamente";
+}
+
+if (isset($_GET['disableSuccess']) && $_GET['disableSuccess'] === 'true') {
+  $success_message = "Usuario deshabilitado exitosamente";
+}
+
+
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
-  $data = [
-    'username' => $_POST['username'],
-    'email' => $_POST['email'],
-    'password' => $_POST['password'],
-    'confirmPassword' => $_POST['confirmPassword'],
-    'rol' => $_POST['rol']
-  ];
+  if (isset($_POST['action_enable_user']) && $_POST['action_enable_user'] === 'EnableUser' && isset($_POST['user_id'])) {
+    $userId = $_POST['user_id'];
+    enableUser($userId);
+  } elseif (isset($_POST['action_disable_user']) && $_POST['action_disable_user'] === 'DisableUser' && isset($_POST['user_id'])) {
+    $userId = $_POST['user_id'];
+    disableUser($userId);
+  } else {
+
+    $data = [
+      'username' => $_POST['username'],
+      'email' => $_POST['email'],
+      'password' => $_POST['password'],
+      'confirmPassword' => $_POST['confirmPassword'],
+      'rol' => $_POST['rol']
+    ];
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, 'http://localhost:8080/user/create');
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+      'Content-Type: application/json',
+    ]);
+
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($httpCode == 200) {
+
+      $responseData = json_decode($response, true);
+      if ($responseData && isset($responseData['user'])) {
+        $usuarios[] = $responseData['user'];
+        header("Location: index.php?page=admin/users&createSuccess=true");
+        exit();
+      } else {
+        $error_message = "Error al obtener datos del usuario.";
+      }
+    } else {
+      $responseData = json_decode($response, true);
+      if ($responseData && isset($responseData['error'])) {
+        $error_message = $responseData['error'];
+      } else {
+        $error_message = "Error desconocido al crear el usuario.";
+      }
+    }
+  }
+}
+
+function enableUser($userId)
+{
+  global $error_message;
 
   $ch = curl_init();
-  curl_setopt($ch, CURLOPT_URL, 'http://localhost:8080/user/create');
+  curl_setopt($ch, CURLOPT_URL, "http://localhost:8080/user/enable/{$userId}");
   curl_setopt($ch, CURLOPT_POST, 1);
-  curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
   curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
   curl_setopt($ch, CURLOPT_HTTPHEADER, [
     'Content-Type: application/json',
   ]);
 
-  $response = curl_exec($ch);
+  $enableResponse = curl_exec($ch);
   $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
   curl_close($ch);
 
   if ($httpCode == 200) {
-
-    $responseData = json_decode($response, true);
-    if ($responseData && isset($responseData['user'])) {
-      $usuarios[] = $responseData['user'];
-      header("Location: index.php?page=admin/users&createSuccess=true");
-      exit();
-    } else {
-      $error_message = "Error al obtener datos del usuario.";
-    }
+    header("Location: index.php?page=admin/users&enableSuccess=true");
+    exit();
   } else {
-    $responseData = json_decode($response, true);
-    if ($responseData && isset($responseData['error'])) {
-      $error_message = $responseData['error'];
-    } else {
-      $error_message = "Error desconocido al crear el usuario.";
-    }
+    $enableData = json_decode($enableResponse, true);
+    $error_message = isset($enableData['error']) ? $enableData['error'] : "Error al habilitar el usuario. Código: {$httpCode}";
+  }
+}
+
+function disableUser($userId)
+{
+
+  global $error_message;
+
+  $ch = curl_init();
+  curl_setopt($ch, CURLOPT_URL, "http://localhost:8080/user/disable/{$userId}");
+  curl_setopt($ch, CURLOPT_POST, 1);
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+  curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    'Content-Type: application/json',
+  ]);
+
+  $disableResponse = curl_exec($ch);
+  $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+  curl_close($ch);
+
+  if ($httpCode == 200) {
+    header("Location: index.php?page=admin/users&disableSuccess=true");
+    exit();
+  } else {
+    $disableData = json_decode($disableResponse, true);
+    $error_message = isset($disableData['error']) ? $disableData['error'] : "Error al deshabilitar el usuario. Código: {$httpCode}";
   }
 }
 
@@ -182,16 +251,16 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
               <td>
                 <form method="POST">
-                  <input type="hidden" name="user_id" id="user_id" value="<?php echo $user['id_usuario'] ?>">
+                  <input type="hidden" name="user_id" value="<?php echo $user['id_usuario'] ?>">
                   <div class="d-flex justify-content-center align-items-center" style="gap: 10px;">
 
                     <?php if ($user['active'] == 1): ?>
-                      <button type="submit" class="btn btn-danger" value="action_disable_user" value="DisableUser" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Deshabilitar usuario">
+                      <button type="submit" class="btn btn-danger" name="action_disable_user" value="DisableUser" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Deshabilitar usuario">
                         <i class="bi bi-person-dash"></i>
                       </button>
                     <?php else: ?>
-                      <button type="submit" class="btn btn-primary text-white" name="action_enable_user" value="EnableUser" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Reactivar usuario">
-                      <i class="bi bi-arrow-clockwise"></i>
+                      <button type="submit" class="btn btn-primary text-white" name="action_enable_user" value="EnableUser" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Activar usuario">
+                        <i class="bi bi-arrow-clockwise"></i>
                       </button>
                     <?php endif; ?>
 

@@ -79,7 +79,8 @@ class UserController
         'email' => $data['email'],
         'password' => $data['password'],
         'confirmPassword' => $data['confirmPassword'],
-        'rol' => $data['rol'] ? $data['rol'] : 2 // Rol por defecto es 2 (Usuario)
+        'rol' => $data['rol'] ? $data['rol'] : 2, // Rol por defecto es 2 (Usuario)
+        'active' => 0 // Por defecto, el usuario se crea como inactivo
       ];
 
       UserValidation::validateData($userData);
@@ -100,16 +101,17 @@ class UserController
           // Si el usuario no existe, continúa con la creación
           $hashedPassword = password_hash($userData['password'], PASSWORD_BCRYPT);
 
-          $updateData = [
+          $createData = [
             $userData['username'],
             $userData['email'],
             $hashedPassword,
             $userData['rol'],
+            $userData['active']
           ];
 
-          $createQuery = 'INSERT INTO usuario (nombre_usuario, correo, contrasena, id_rol) VALUES (?, ?, ?, ?)';
+          $createQuery = 'INSERT INTO usuario (nombre_usuario, correo, contrasena, id_rol, active) VALUES (?, ?, ?, ?, ?)';
 
-          return $this->conn->query($createQuery, $updateData)->then(
+          return $this->conn->query($createQuery, $createData)->then(
             function (QueryResult $result) use ($userData) {
               $user = array_merge(['id' => $result->insertId], $userData);
               return JSONResponse::response(200, [
@@ -198,4 +200,69 @@ class UserController
       ]);
     }
   }
+
+  public function disableUser(ServerRequestInterface $request, $id)
+  {
+    try {
+      if (empty($id)) {
+        return JSONResponse::response(400, ['ok' => false, 'error' => 'ID de usuario no proporcionado']);
+      }
+
+      $disableQuery = 'UPDATE usuario SET active = 0 WHERE id_usuario = ?';
+      $selectQueryValidation = 'SELECT id_usuario FROM usuario WHERE id_usuario = ?';
+
+      return $this->conn->query($selectQueryValidation, [$id])->then(function ($result) use ($disableQuery, $id) {
+        if (count($result->resultRows) === 0) {
+          return JSONResponse::response(404, ['ok' => false, 'error' => 'Usuario no encontrado']);
+        }
+        return $this->conn->query($disableQuery, [$id])->then(function (QueryResult $result) {
+          if ($result->affectedRows > 0) {
+            return JSONResponse::response(200, ['ok' => true, 'message' => 'Usuario deshabilitado correctamente']);
+          } else {
+            return JSONResponse::response(404, ['ok' => false, 'error' => 'Usuario no encontrado']);
+          }
+        }, function (Exception $e) {
+          return JSONResponse::response(500, ['ok' => false, 'error' => 'Error al deshabilitar el usuario: ' . $e->getMessage()]);
+        });
+      });
+    } catch (Exception $e) {
+      return JSONResponse::response(500, [
+        "ok" => false,
+        "error" => $e->getMessage()
+      ]);
+    }
+  }
+
+  public function enableUser(ServerRequestInterface $request, $id)
+  {
+    try {
+      if (empty($id)) {
+        return JSONResponse::response(400, ['ok' => false, 'error' => 'ID de usuario no proporcionado']);
+      }
+
+      $disableQuery = 'UPDATE usuario SET active = 1 WHERE id_usuario = ?';
+      $selectQueryValidation = 'SELECT id_usuario FROM usuario WHERE id_usuario = ?';
+
+      return $this->conn->query($selectQueryValidation, [$id])->then(function ($result) use ($disableQuery, $id) {
+        if (count($result->resultRows) === 0) {
+          return JSONResponse::response(404, ['ok' => false, 'error' => 'Usuario no encontrado']);
+        }
+        return $this->conn->query($disableQuery, [$id])->then(function (QueryResult $result) {
+          if ($result->affectedRows > 0) {
+            return JSONResponse::response(200, ['ok' => true, 'message' => 'Usuario habilitado correctamente']);
+          } else {
+            return JSONResponse::response(404, ['ok' => false, 'error' => 'Usuario no encontrado']);
+          }
+        }, function (Exception $e) {
+          return JSONResponse::response(500, ['ok' => false, 'error' => 'Error al habilitar el usuario: ' . $e->getMessage()]);
+        });
+      });
+    } catch (Exception $e) {
+      return JSONResponse::response(500, [
+        "ok" => false,
+        "error" => $e->getMessage()
+      ]);
+    }
+  }
+
 }
