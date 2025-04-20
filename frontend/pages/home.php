@@ -17,17 +17,17 @@ $licenses = [];
 $error_message = null;
 $success_message = null;
 
-// Verificar si hay un mensaje de éxito en la URL
-if (isset($_GET['editSucess']) && $_GET['editSucess'] === 'true') {
-  $success_message = "Licencia actualizada correctamente";
-}
+$alertTypes = [
+  'createSuccess' => 'Licencia creada exitosamente',
+  'editSuccess' => 'Licencia actualizada exitosamente',
+  'sendEmail' => 'Correo enviado exitosamente'
+];
 
-if (isset($_GET['createSuccess']) && $_GET['createSuccess'] === 'true') {
-  $success_message = "Licencia creada correctamente";
-}
-
-if (isset($_GET['sendEmail']) && $_GET['sendEmail'] === 'true') {
-  $success_message = "Correo enviado exitosamente";
+foreach ($alertTypes as $param => $message) {
+  if (isset($_GET[$param]) && $_GET[$param] === 'true') {
+    $success_message = $message;
+    break; 
+  }
 }
 
 // *Cargando las licencias desde la API*
@@ -38,8 +38,6 @@ try {
   curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
   curl_setopt($ch, CURLOPT_HTTPHEADER, [
     'Content-Type: application/json',
-    // Si la API requiere token de autenticación:
-    // 'Authorization: Bearer ' . ($_SESSION['token'] ?? '')
   ]);
 
   // Ejecutar la petición
@@ -100,9 +98,9 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
+    $responseData = json_decode($response, true);
 
     if ($httpCode == 200) {
-      $responseData = json_decode($response, true);
       if ($responseData && isset($responseData['licencia'])) {
         $licenses[] = $responseData['licencia'];
         header("Location: index.php?page=home&createSuccess=true");
@@ -111,12 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         $error_message = "Error al obtener datos de la licencia.";
       }
     } else {
-      $responseData = json_decode($response, true);
-      if ($responseData && isset($responseData['error'])) {
-        $error_message = $responseData['error'];
-      } else {
-        $error_message = "Error desconocido al crear la licencia.";
-      }
+      $error_message = isset($responseData['error']) ? $responseData['error'] : "Error desconocido al crear la licencia.";      
     }
   }
 }

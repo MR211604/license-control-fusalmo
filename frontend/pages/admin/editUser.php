@@ -5,7 +5,6 @@ if (!isset($_SESSION["id_rol"]) || $_SESSION["id_rol"] != 1) {
   exit();
 }
 
-
 $user = null;
 $error_message = null;
 
@@ -25,16 +24,16 @@ if (isset($_GET['id']) && !empty($_GET['id'])) {
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
+    $responseData = json_decode($response, true);
 
     if ($httpCode == 200) {
-      $responseData = json_decode($response, true);
       if (isset($responseData['usuario'])) {
         $user = $responseData['usuario'];
       } else {
         $error_message = "No se encontró el usuario solicitado";
       }
     } else {
-      $error_message = "Error al obtener el usuario. Código: " . $httpCode;
+      $error_message = isset($responseData['error']) ? $responseData['error'] : "Error al obtener el usuario. Código: {$httpCode}";
     }
   } catch (Exception $e) {
     $error_message = "Error en la conexión: " . $e->getMessage();
@@ -68,17 +67,13 @@ if ($_SERVER['REQUEST_METHOD'] == "POST" && isset($userId)) {
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
 
+    $responseData = json_decode($response, true);
     if ($httpCode == 200) {
       // Redirigir a la página principal con mensaje de éxito
       header("Location: index.php?page=admin/users&editSucess=true");
       exit();
     } else {
-      $responseData = json_decode($response, true);
-      if (isset($responseData['error'])) {
-        $error_message = $responseData['error'];
-      } else {
-        $error_message = "Error al actualizar la licencia. Código: " . $httpCode;
-      }
+      $error_message = isset($responseData['error']) ? $responseData['error'] : "Error al actualizar el usuario. Código: {$httpCode}";
     }
   } catch (Exception $e) {
     $error_message = "Error en la conexión: " . $e->getMessage();

@@ -38,22 +38,20 @@ try {
   $error_message = "Error en la conexión: " . $e->getMessage();
 }
 
-if (isset($_GET['createSuccess']) && $_GET['createSuccess'] === 'true') {
-  $success_message = "Usuario creado exitosamente";
-}
+// Optimización de mensajes de alerta basados en parámetros de URL
+$alertTypes = [
+  'createSuccess' => 'Usuario creado exitosamente',
+  'editSuccess' => 'Usuario actualizado exitosamente',
+  'enableSuccess' => 'Usuario activado exitosamente',
+  'disableSuccess' => 'Usuario deshabilitado exitosamente'
+];
 
-if (isset($_GET['editSucess']) && $_GET['editSucess'] === 'true') {
-  $success_message = "Usuario actualizado exitosamente";
+foreach ($alertTypes as $param => $message) {
+  if (isset($_GET[$param]) && $_GET[$param] === 'true') {
+    $success_message = $message;
+    break;
+  }
 }
-
-if (isset($_GET['enableSuccess']) && $_GET['enableSuccess'] === 'true') {
-  $success_message = "Usuario activado exitosamente";
-}
-
-if (isset($_GET['disableSuccess']) && $_GET['disableSuccess'] === 'true') {
-  $success_message = "Usuario deshabilitado exitosamente";
-}
-
 
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
@@ -85,10 +83,9 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
+    $responseData = json_decode($response, true);
 
     if ($httpCode == 200) {
-
-      $responseData = json_decode($response, true);
       if ($responseData && isset($responseData['user'])) {
         $usuarios[] = $responseData['user'];
         header("Location: index.php?page=admin/users&createSuccess=true");
@@ -97,12 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         $error_message = "Error al obtener datos del usuario.";
       }
     } else {
-      $responseData = json_decode($response, true);
-      if ($responseData && isset($responseData['error'])) {
-        $error_message = $responseData['error'];
-      } else {
-        $error_message = "Error desconocido al crear el usuario.";
-      }
+      $errror_message = isset($responseData['error']) ? $responseData['error'] : "Error al crear el usuario. Código: {$httpCode}";
     }
   }
 }

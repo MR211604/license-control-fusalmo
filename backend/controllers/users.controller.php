@@ -148,11 +148,51 @@ class UserController
       $userData = [
         'username' => $data['username'],
         'email' => $data['email'],
-        'password' => $data['password'],
-        'confirmPassword' => $data['confirmPassword'],
+        'password' => $data['password'] ? $data['password'] : null,
+        'confirmPassword' => $data['confirmPassword'] ? $data['confirmPassword'] : null,
         'rol' => $data['rol'] ? $data['rol'] : 2
       ];
 
+      $updateQuery = 'UPDATE usuario SET nombre_usuario = ?, correo = ?, contrasena = ?, id_rol = ? WHERE id_usuario = ?';
+      $selectQueryValidation = 'SELECT id_usuario FROM usuario WHERE id_usuario = ?';
+
+      //No cambiar la contraseña si no se proporciona una nueva
+      if ($userData['password'] === null && $userData['confirmPassword'] === null) {
+
+        $updateWithoutPasswordQuery = 'UPDATE usuario SET nombre_usuario = ?, correo = ?, id_rol = ? WHERE id_usuario = ?';
+
+        return $this->userExistsUpdate($userData['email'], $userData['username'], $id)->then(
+          function ($exists) use ($id, $updateWithoutPasswordQuery, $userData, $selectQueryValidation) {
+
+            if ($exists === true) {
+              return JSONResponse::response(400, [
+                "ok" => false,
+                "error" => "El correo o usuario ingresado ya está en uso"
+              ]);
+            }
+            $updateDataWithoutPassword = [
+              $userData['username'],
+              $userData['email'],
+              $userData['rol'],
+              $id
+            ];
+            return $this->conn->query($selectQueryValidation, [$id])->then(function ($result) use ($updateWithoutPasswordQuery, $updateDataWithoutPassword) {
+              if (count($result->resultRows) === 0) {
+                return JSONResponse::response(404, ['ok' => false, 'error' => 'Usuario no encontrado']);
+              }
+              return $this->conn->query($updateWithoutPasswordQuery, $updateDataWithoutPassword)->then(function (QueryResult $result) {
+                if ($result->affectedRows > 0) {
+                  return JSONResponse::response(200, ['ok' => true, 'message' => 'Usuario actualizado correctamente']);
+                } else {
+                  return JSONResponse::response(404, ['ok' => false, 'error' => 'Usuario no actualizado. Los datos ingresados son iguales a los actuales']);
+                }
+              }, function (Exception $e) {
+                return JSONResponse::response(500, ['ok' => false, 'error' => 'Error al actualizar el usuario: ' . $e->getMessage()]);
+              });
+            });
+          }
+        );
+      }
 
       $hashedPassword = password_hash($userData['password'], PASSWORD_BCRYPT);
 
@@ -163,9 +203,6 @@ class UserController
         $userData['rol'],
         $id
       ];
-
-      $updateQuery = 'UPDATE usuario SET nombre_usuario = ?, correo = ?, contrasena = ?, id_rol = ? WHERE id_usuario = ?';
-      $selectQueryValidation = 'SELECT id_usuario FROM usuario WHERE id_usuario = ?';
 
       UserValidation::validateConfirmPassword($userData['password'], $userData['confirmPassword']);
 
@@ -185,7 +222,7 @@ class UserController
               if ($result->affectedRows > 0) {
                 return JSONResponse::response(200, ['ok' => true, 'message' => 'Usuario actualizado correctamente']);
               } else {
-                return JSONResponse::response(404, ['ok' => false, 'error' => 'Usuario no encontrado']);
+                return JSONResponse::response(404, ['ok' => false, 'error' => 'Usuario no actualizado. Los datos ingresados son iguales a los actuales']);
               }
             }, function (Exception $e) {
               return JSONResponse::response(500, ['ok' => false, 'error' => 'Error al actualizar el usuario: ' . $e->getMessage()]);
@@ -264,5 +301,4 @@ class UserController
       ]);
     }
   }
-
 }

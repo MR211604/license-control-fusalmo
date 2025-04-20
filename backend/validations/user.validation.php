@@ -9,11 +9,11 @@ class UserValidation
 
     $name = $data['username'];
     $email = $data['email'];
-    $password = $data['password'];
-    $confirmPassword = $data['confirmPassword'];
+    // $password = $data['password'];
+    // $confirmPassword = $data['confirmPassword'];
     $rol = $data['rol'];
 
-    if (empty($name) || empty($email) || empty($password) || empty($rol) || empty($confirmPassword)) {
+    if (empty($name) || empty($email)  || empty($rol)) {
       throw new Exception('Todos los campos son obligatorios');
     }
 

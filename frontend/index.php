@@ -7,7 +7,7 @@ session_start();
 $page = isset($_GET['page']) ? $_GET['page'] : 'home';
 
 // Lista de páginas válidas
-$allowed_pages = ['home', 'login', 'register', 'licenses/addLicense', 'licenses/editLicense', 'admin/users', 'admin/addUser', 'admin/editUser'];
+$allowed_pages = ['home', 'login', 'register', 'licenses/editLicense', 'admin/users', 'admin/editUser'];
 
 // Validar la página
 if (!in_array($page, $allowed_pages)) {
@@ -52,6 +52,14 @@ $page_path = "./pages/{$page}.php";
   <footer>
     <?php include('./components/footer.php'); ?>
   </footer>
+
+  <script>
+    // Inicializar todos los tooltips en la página
+    document.addEventListener('DOMContentLoaded', function() {
+      const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+      const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+    });
+  </script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq" crossorigin="anonymous"></script>
 </body>
