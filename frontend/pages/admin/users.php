@@ -38,19 +38,21 @@ try {
   $error_message = "Error en la conexión: " . $e->getMessage();
 }
 
-// Optimización de mensajes de alerta basados en parámetros de URL
-$alertTypes = [
-  'createSuccess' => 'Usuario creado exitosamente',
-  'editSuccess' => 'Usuario actualizado exitosamente',
-  'enableSuccess' => 'Usuario activado exitosamente',
-  'disableSuccess' => 'Usuario deshabilitado exitosamente'
-];
+// mensajes de alerta basados en parámetros de URL
+if (isset($_GET['createSuccess']) && $_GET['createSuccess'] === 'true') {
+  $success_message = "Usuario creado exitosamente";
+}
 
-foreach ($alertTypes as $param => $message) {
-  if (isset($_GET[$param]) && $_GET[$param] === 'true') {
-    $success_message = $message;
-    break;
-  }
+if (isset($_GET['editSucess']) && $_GET['editSucess'] === 'true') {
+  $success_message = "Usuario actualizado exitosamente";
+}
+
+if (isset($_GET['enableSuccess']) && $_GET['enableSuccess'] === 'true') {
+  $success_message = "Usuario activado exitosamente";
+}
+
+if (isset($_GET['disableSuccess']) && $_GET['disableSuccess'] === 'true') {
+  $success_message = "Usuario deshabilitado exitosamente";
 }
 
 if ($_SERVER['REQUEST_METHOD'] == "POST") {

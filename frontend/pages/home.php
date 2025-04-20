@@ -17,17 +17,25 @@ $licenses = [];
 $error_message = null;
 $success_message = null;
 
-$alertTypes = [
-  'createSuccess' => 'Licencia creada exitosamente',
-  'editSuccess' => 'Licencia actualizada exitosamente',
-  'sendEmail' => 'Correo enviado exitosamente'
-];
 
-foreach ($alertTypes as $param => $message) {
-  if (isset($_GET[$param]) && $_GET[$param] === 'true') {
-    $success_message = $message;
-    break; 
-  }
+if (isset($_GET['createSuccess']) && $_GET['createSuccess'] === 'true') {
+  $success_message = "Licencia creado exitosamente";
+}
+
+if (isset($_GET['editSucess']) && $_GET['editSucess'] === 'true') {
+  $success_message = "Licencia actualizada exitosamente";
+}
+
+if (isset($_GET['renovateSuccess']) && $_GET['renovateSuccess'] === 'true') {
+  $success_message = "Licencia renovada exitosamente";
+}
+
+if (isset($_GET['suspendSuccess']) && $_GET['suspendSuccess'] === 'true') {
+  $success_message = "Licencia suspendida exitosamente";
+}
+
+if (isset($_GET['sendEmail']) && $_GET['sendEmail'] === 'true') {
+  $success_message = "Correo enviado exitosamente";
 }
 
 // *Cargando las licencias desde la API*

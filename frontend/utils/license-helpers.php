@@ -24,7 +24,7 @@ function renovateLicense($licenseId)
 
     if ($updateHttpCode == 200) {
       // Pasar el mensaje de éxito como parámetro en la URL
-      header("Location: index.php?page=home&editSucess=true");
+      header("Location: index.php?page=home&renovateSuccess=true");
       exit();
     } else {
       $updateData = json_decode($updateResponse, true);
@@ -59,7 +59,7 @@ function suspendLicense($licenseId)
 
     if ($updateHttpCode == 200) {
       // Pasar el mensaje de éxito como parámetro en la URL
-      header("Location: index.php?page=home&editSucess=true");
+      header("Location: index.php?page=home&suspendSuccess=true");
       exit();
     } else {
       $updateData = json_decode($updateResponse, true);
