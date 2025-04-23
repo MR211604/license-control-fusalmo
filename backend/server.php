@@ -45,7 +45,11 @@ $r->addGroup('/user', function (RouteCollector $r) use ($userController) {
   $r->addRoute('PUT', '/update/{id:\d+}', [$userController, 'updateUserById']);
   $r->addRoute('POST', '/disable/{id:\d+}', [$userController, 'disableUser']);
   $r->addRoute('POST', '/enable/{id:\d+}', [$userController, 'enableUser']);
-  
+});
+
+//Selects
+$r->addGroup('/select', function (RouteCollector $r) use ($userController) {
+  $r->addRoute('GET', '/getAllUsers', [$userController, 'getUsersSelect']);
 });
 
 //Email sending
@@ -55,7 +59,7 @@ $r->addGroup('/email', function (RouteCollector $r) use ($emailService) {
 
 
 $http = new HttpServer(new CorsMiddleware(['allow_origin' => ['*'],]), new Router($r));
-$socket = new React\Socket\SocketServer('127.0.0.1:8080');
+$socket = new React\Socket\SocketServer('0.0.0.0:8080');
 $http->listen($socket);
 
 $http->on(
@@ -65,4 +69,4 @@ $http->on(
   }
 );
 
-echo "Server running at http://127.0.0.1:8080" . PHP_EOL;
+echo "Server running at http://0.0.0.0:8080" . PHP_EOL;

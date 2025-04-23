@@ -1,5 +1,7 @@
 <?php
 
+$api_url = getenv('API_URL') ?: 'http://localhost:8080';
+
 if (!isset($_SESSION["user_id"])) {
   header("Location: index.php?page=login");
   exit();
@@ -15,7 +17,7 @@ if (isset($_GET['id']) && !empty($_GET['id'])) {
   // Obtener los datos de la licencia específica
   try {
     $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, "http://localhost:8080/license/{$licenseId}");
+    curl_setopt($ch, CURLOPT_URL, $api_url . "/license/{$licenseId}");
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
       'Content-Type: application/json',
@@ -57,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST" && isset($licenseId)) {
 
   try {
     $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, "http://localhost:8080/license/update/{$licenseId}");
+    curl_setopt($ch, CURLOPT_URL, $api_url . "/license/update/{$licenseId}");
     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);

@@ -1,5 +1,5 @@
 <footer>
-  <div class="container">
+  <div class="container mt-3">
     <p>&copy; <?php echo date("Y"); ?> FUSALMO. All rights reserved.</p>
     <ul class="social-media">
       <li><a href="https://www.facebook.com/FUSALMO" target="_blank">Facebook</a></li>
@@ -25,7 +25,7 @@
   body {
     min-height: 100vh;
     position: relative;
-  }
+  } 
 
   .social-media {
     list-style: none;

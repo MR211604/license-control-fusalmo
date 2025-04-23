@@ -29,6 +29,20 @@ class UserController
     }
   }
 
+  //Obtener unicamente id y nombre de usuario para el select de usuarios
+  public function getUsersSelect()
+  {
+    try {
+      return $this->conn->query('SELECT id_usuario, nombre_usuario FROM usuario')->then(function ($result) {
+        return JSONResponse::response(200, ['ok' => true, 'usuarios' => $result->resultRows]);
+      }, function (Exception $e) {
+        return JSONResponse::response(500, ['ok' => false, 'error' => 'Error al obtener los usuarios: ' . $e->getMessage()]);
+      });
+    } catch (Exception $e) {
+      return JSONResponse::response(500, ['ok' => false, 'error' => 'Error al obtener los usuarios: ' . $e->getMessage()]);
+    }
+  }
+
   public function getUserById(ServerRequestInterface $request, $id)
   {
     if (empty($id)) {

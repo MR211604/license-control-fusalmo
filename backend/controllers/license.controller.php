@@ -27,29 +27,35 @@ class LicenseController
 
   public function getLicenses()
   {
-    return $this->conn->query('SELECT * FROM licencias')->then(function ($result) {
-      return JSONResponse::response(200, ['ok' => true, 'licencias' => $result->resultRows]);
-    }, function (Exception $e) {
+    try {
+      return $this->conn->query('SELECT * FROM licencias')->then(function ($result) {
+        return JSONResponse::response(200, ['ok' => true, 'licencias' => $result->resultRows]);
+      }, function (Exception $e) {
+        return JSONResponse::response(500, ['ok' => false, 'error' => 'Error al obtener las licencias: ' . $e->getMessage()]);
+      });
+    } catch (Exception $e) {
       return JSONResponse::response(500, ['ok' => false, 'error' => 'Error al obtener las licencias: ' . $e->getMessage()]);
-    });
+    }
   }
 
   public function getLicenseById(ServerRequestInterface $request, $id)
   {
-
-    if (empty($id)) {
-      return JSONResponse::response(400, ['ok' => false, 'error' => 'ID de licencia no proporcionado']);
-    }
-
-    return $this->conn->query('SELECT * FROM licencias WHERE id = ?', [$id])->then(function ($result) {
-      if (count($result->resultRows) > 0) {
-        return JSONResponse::response(200, ['ok' => true, 'licencia' => $result->resultRows[0]]);
-      } else {
-        return JSONResponse::response(404, ['ok' => false, 'error' => 'Licencia no encontrada']);
+    try {
+      if (empty($id)) {
+        return JSONResponse::response(400, ['ok' => false, 'error' => 'ID de licencia no proporcionado']);
       }
-    }, function (Exception $e) {
+      return $this->conn->query('SELECT * FROM licencias WHERE id = ?', [$id])->then(function ($result) {
+        if (count($result->resultRows) > 0) {
+          return JSONResponse::response(200, ['ok' => true, 'licencia' => $result->resultRows[0]]);
+        } else {
+          return JSONResponse::response(404, ['ok' => false, 'error' => 'Licencia no encontrada']);
+        }
+      }, function (Exception $e) {
+        return JSONResponse::response(500, ['ok' => false, 'error' => 'Error al obtener la licencia: ' . $e->getMessage()]);
+      });
+    } catch (Exception $e) {
       return JSONResponse::response(500, ['ok' => false, 'error' => 'Error al obtener la licencia: ' . $e->getMessage()]);
-    });
+    }
   }
 
   // *Validando que el correo no este en uso
@@ -63,7 +69,8 @@ class LicenseController
   }
 
   // *Validando que el correo no este en uso (para ids que no sean el correspondiente)
-  public function licenseExistsUpdate($email, $id) {
+  public function licenseExistsUpdate($email, $id)
+  {
     return $this->conn->query('SELECT * FROM licencias WHERE correo = ? AND NOT id = ?', [$email, $id])->then(function ($result) {
       return count($result->resultRows) > 0;
     }, function (Exception $e) {
@@ -78,7 +85,7 @@ class LicenseController
 
       $body = $request->getBody()->getContents();
       $data = json_decode($body, true);
-     
+
       $licenseData = [
         'plataforma' => $data['plataforma'],
         'correo' => $data['correo'],
@@ -119,7 +126,7 @@ class LicenseController
     try {
       $body = $request->getBody()->getContents();
       $data = json_decode($body, true);
-      
+
       $licenseData = [
         'plataforma' => $data['plataforma'],
         'correo' => $data['correo'],
@@ -130,7 +137,7 @@ class LicenseController
         'fechaDeSuspension' => isset($data['fechaDeSuspension']) ? $data['fechaDeSuspension'] : null,
         'id_usuario' => $data['id_usuario'],
       ];
-      
+
       LicenseValidation::validateData($licenseData);
 
       $selectQueryValidation = 'SELECT id FROM licencias WHERE id = ?';
@@ -139,7 +146,7 @@ class LicenseController
       $params = array_values($licenseData);
 
       return $this->licenseExistsUpdate($licenseData['correo'], $id)->then(function ($exists) use ($licenseData, $id, $selectQueryValidation, $updateQuery, $params) {
-        
+
         //*Validando que el correo no este en uso (para ids que no sean el correspondiente)
         if ($exists) {
           return JSONResponse::response(400, ['ok' => false, 'error' => 'El correo ya está en uso']);
@@ -165,48 +172,56 @@ class LicenseController
           });
         });
       });
-
     } catch (Exception $e) {
       return JSONResponse::response(500, ['ok' => false, 'error' => $e->getMessage()]);
     }
   }
 
-  public function renovateLicenseById(ServerRequestInterface $request, $id) {
-    if (empty($id)) {
-      return JSONResponse::response(400, ['ok' => false, 'error' => 'ID de licencia no proporcionado']);
-    }
-    $suspendQuery = 'UPDATE licencias SET fecha_de_renovacion = NOW() WHERE id = ?';
-    return $this->conn->query('SELECT id FROM licencias WHERE id = ?', [$id])->then(function ($result) use ($id, $suspendQuery) {
-      if (count($result->resultRows) === 0) {
-        return JSONResponse::response(404, ['ok' => false, 'error' => 'Licencia con el id ' . $id . ' no encontrada']);
+  public function renovateLicenseById(ServerRequestInterface $request, $id)
+  {
+    try {
+      if (empty($id)) {
+        return JSONResponse::response(400, ['ok' => false, 'error' => 'ID de licencia no proporcionado']);
       }
-      return $this->conn->query($suspendQuery, [$id])->then(function () {
-        return JSONResponse::response(200, ['ok' => true, 'message' => 'Licencia renovada correctamente']);
+      $suspendQuery = 'UPDATE licencias SET fecha_de_renovacion = NOW() WHERE id = ?';
+      return $this->conn->query('SELECT id FROM licencias WHERE id = ?', [$id])->then(function ($result) use ($id, $suspendQuery) {
+        if (count($result->resultRows) === 0) {
+          return JSONResponse::response(404, ['ok' => false, 'error' => 'Licencia con el id ' . $id . ' no encontrada']);
+        }
+        return $this->conn->query($suspendQuery, [$id])->then(function () {
+          return JSONResponse::response(200, ['ok' => true, 'message' => 'Licencia renovada correctamente']);
+        }, function (Exception $error) {
+          return JSONResponse::response(500, ['ok' => false, 'error' => 'Error al renovar la licencia: ' . $error->getMessage()]);
+        });
       }, function (Exception $error) {
-        return JSONResponse::response(500, ['ok' => false, 'error' => 'Error al renovar la licencia: ' . $error->getMessage()]);
+        return JSONResponse::response(500, ['ok' => false, 'error' => 'Error al encontrar la licencia: ' . $error->getMessage()]);
       });
-    }, function (Exception $error) {
-      return JSONResponse::response(500, ['ok' => false, 'error' => 'Error al encontrar la licencia: ' . $error->getMessage()]);
-    });
+    } catch (Exception $e) {
+      return JSONResponse::response(500, ['ok' => false, 'error' => 'Error al renovar la licencia: ' . $e->getMessage()]);
+    }
   }
-  
+
   public function suspendLicenseById(ServerRequestInterface $request, $id)
   {
-    if (empty($id)) {
-      return JSONResponse::response(400, ['ok' => false, 'error' => 'ID de licencia no proporcionado']);
-    }
-    $suspendQuery = 'UPDATE licencias SET fecha_de_suspension = NOW(), suspended = 1 WHERE id = ?';
-    return $this->conn->query('SELECT id FROM licencias WHERE id = ?', [$id])->then(function ($result) use ($id, $suspendQuery) {
-      if (count($result->resultRows) === 0) {
-        return JSONResponse::response(404, ['ok' => false, 'error' => 'Licencia con el id ' . $id . ' no encontrada']);
+    try {
+      if (empty($id)) {
+        return JSONResponse::response(400, ['ok' => false, 'error' => 'ID de licencia no proporcionado']);
       }
-      return $this->conn->query($suspendQuery, [$id])->then(function () {
-        return JSONResponse::response(200, ['ok' => true, 'message' => 'Licencia suspendida correctamente']);
+      $suspendQuery = 'UPDATE licencias SET fecha_de_suspension = NOW(), suspended = 1 WHERE id = ?';
+      return $this->conn->query('SELECT id FROM licencias WHERE id = ?', [$id])->then(function ($result) use ($id, $suspendQuery) {
+        if (count($result->resultRows) === 0) {
+          return JSONResponse::response(404, ['ok' => false, 'error' => 'Licencia con el id ' . $id . ' no encontrada']);
+        }
+        return $this->conn->query($suspendQuery, [$id])->then(function () {
+          return JSONResponse::response(200, ['ok' => true, 'message' => 'Licencia suspendida correctamente']);
+        }, function (Exception $error) {
+          return JSONResponse::response(500, ['ok' => false, 'error' => 'Error al suspender el la licencia: ' . $error->getMessage()]);
+        });
       }, function (Exception $error) {
-        return JSONResponse::response(500, ['ok' => false, 'error' => 'Error al suspender el la licencia: ' . $error->getMessage()]);
+        return JSONResponse::response(500, ['ok' => false, 'error' => 'Error al encontrar la licencia: ' . $error->getMessage()]);
       });
-    }, function (Exception $error) {
-      return JSONResponse::response(500, ['ok' => false, 'error' => 'Error al encontrar la licencia: ' . $error->getMessage()]);
-    });
+    } catch (Exception $e) {
+      return JSONResponse::response(500, ['ok' => false, 'error' => 'Error al suspender la licencia: ' . $e->getMessage()]);
+    }
   }
 }

@@ -1,10 +1,8 @@
 <?php
 
-// session_start();
-
 if (isset($_GET['logout'])) {
   session_destroy();
-  header("Location: ../frontend/index.php?page=login");
+  header("Location: index.php?page=login");
   exit();
 }
 

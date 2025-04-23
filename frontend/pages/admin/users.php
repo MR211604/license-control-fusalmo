@@ -1,5 +1,7 @@
 <?php
 
+$api_url = getenv('API_URL') ?: 'http://localhost:8080';
+
 if (!isset($_SESSION["id_rol"]) || $_SESSION["id_rol"] != 1) {
   header("Location: index.php?page=home");
   exit();
@@ -12,7 +14,7 @@ $success_message = null;
 
 try {
   $ch = curl_init();
-  curl_setopt($ch, CURLOPT_URL, 'http://localhost:8080/user/getAll');
+  curl_setopt($ch, CURLOPT_URL, $api_url . '/user/getAll');
   curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
   curl_setopt($ch, CURLOPT_HTTPHEADER, [
     'Content-Type: application/json',
@@ -74,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
     ];
 
     $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, 'http://localhost:8080/user/create');
+    curl_setopt($ch, CURLOPT_URL, $api_url . '/user/create');
     curl_setopt($ch, CURLOPT_POST, 1);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -104,9 +106,10 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 function enableUser($userId)
 {
   global $error_message;
+  global $api_url;
 
   $ch = curl_init();
-  curl_setopt($ch, CURLOPT_URL, "http://localhost:8080/user/enable/{$userId}");
+  curl_setopt($ch, CURLOPT_URL, $api_url . "/user/enable/{$userId}");
   curl_setopt($ch, CURLOPT_POST, 1);
   curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
   curl_setopt($ch, CURLOPT_HTTPHEADER, [
@@ -130,9 +133,10 @@ function disableUser($userId)
 {
 
   global $error_message;
+  global $api_url;
 
   $ch = curl_init();
-  curl_setopt($ch, CURLOPT_URL, "http://localhost:8080/user/disable/{$userId}");
+  curl_setopt($ch, CURLOPT_URL, $api_url . "/user/disable/{$userId}");
   curl_setopt($ch, CURLOPT_POST, 1);
   curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
   curl_setopt($ch, CURLOPT_HTTPHEADER, [

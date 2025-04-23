@@ -1,9 +1,6 @@
 <?php
-// Verificar si ya está logueado
-if (isset($_SESSION["user_id"])) {
-  header("Location: index.php?page=home");
-  exit();
-}
+// Determinar la URL de la API (Docker vs desarrollo local)
+$api_url = getenv('API_URL') ?: 'http://localhost:8080';
 
 // Procesar el formulario si se envió
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -14,39 +11,43 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     'password' => $_POST['password']
   ];
 
-  $ch = curl_init();
-  curl_setopt($ch, CURLOPT_URL, 'http://localhost:8080/auth/login');
-  curl_setopt($ch, CURLOPT_POST, 1);
-  curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-  curl_setopt($ch, CURLOPT_HTTPHEADER, [
-    'Content-Type: application/json',
-  ]);
+  try {
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $api_url . '/auth/login');
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+      'Content-Type: application/json',
+    ]);
 
-  $response = curl_exec($ch); 
-  $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-  curl_close($ch);
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
 
-  if($httpCode == 200) {
-    $userData = json_decode($response, true);
+    if ($httpCode == 200) {
+      $userData = json_decode($response, true);
 
-    if($userData && isset($userData['user'])) {
-      $_SESSION["user_id"] = $userData['user']['id'];
-      $_SESSION["username"] = $userData['user']['username'];
-      $_SESSION["id_rol"] = $userData['user']['id_rol'];
+      if ($userData && isset($userData['user'])) {
+        $_SESSION["user_id"] = $userData['user']['id'];
+        $_SESSION["username"] = $userData['user']['username'];
+        $_SESSION["id_rol"] = $userData['user']['id_rol'];
 
-      header("Location: index.php?page=home");
-      exit();
+        header("Location: index.php?page=home");
+        exit();
+      } else {
+        $error_message = "Error al obtener los datos del usuario.";
+      }
     } else {
-      $error_message = "Error al obtener los datos del usuario.";
+      $responseData = json_decode($response, true);
+      if ($responseData && isset($responseData['error'])) {
+        $error_message = $responseData['error'];
+      } else {
+        $error_message = "Error desconocido al iniciar sesión." . $httpCode;
+      }
     }
-  } else {
-    $responseData = json_decode($response, true);
-    if($responseData && isset($responseData['error'])) {
-      $error_message = $responseData['error'];
-    } else {
-      $error_message = "Error desconocido al iniciar sesión.";
-    }    
+  } catch (Exception $e) {
+    $error_message = "Error al procesar la solicitud: " . $e->getMessage();
   }
 }
 

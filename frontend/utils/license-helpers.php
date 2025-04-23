@@ -7,11 +7,12 @@
 function renovateLicense($licenseId)
 {
   global $error_message;
+  global $api_url;
 
   // Obtener primero la licencia actual para mantener todos sus datos
   try {
     $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, "http://localhost:8080/license/renovate/{$licenseId}");
+    curl_setopt($ch, CURLOPT_URL, $api_url . "/license/renovate/{$licenseId}");
     curl_setopt($ch, CURLOPT_POST, 1);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
@@ -42,11 +43,12 @@ function renovateLicense($licenseId)
 function suspendLicense($licenseId)
 {
   global $error_message;
+  global $api_url;
 
   // Obtener primero la licencia actual para mantener todos sus datos
   try {
     $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, "http://localhost:8080/license/suspend/{$licenseId}");
+    curl_setopt($ch, CURLOPT_URL, $api_url . "/license/suspend/{$licenseId}");
     curl_setopt($ch, CURLOPT_POST, 1);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_HTTPHEADER, [

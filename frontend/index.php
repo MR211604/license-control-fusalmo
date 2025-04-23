@@ -1,4 +1,6 @@
 <?php
+// Iniciar buffer de salida
+ob_start();
 
 // Iniciar sesión al principio
 session_start();
@@ -14,8 +16,14 @@ if (!in_array($page, $allowed_pages)) {
   $page = 'home';
 }
 
+// Verificar autenticación (excepto para la página de login)
+if ($page !== 'login' && $page !== 'register' && !isset($_SESSION["user_id"])) {
+  header("Location: index.php?page=login");
+  exit();
+}
+
 // Determinar la ruta completa del archivo a incluir
-$page_path = "./pages/{$page}.php";
+$page_path = __DIR__ . "/pages/{$page}.php";
 
 ?>
 
@@ -53,6 +61,20 @@ $page_path = "./pages/{$page}.php";
     <?php include('./components/footer.php'); ?>
   </footer>
 
+  <style>
+    @media (min-width: 1400px) {
+
+      .container,
+      .container-lg,
+      .container-md,
+      .container-sm,
+      .container-xl,
+      .container-xxl {
+        max-width: 1440px !important;
+      }
+    }
+  </style>
+
   <script>
     // Inicializar todos los tooltips en la página
     document.addEventListener('DOMContentLoaded', function() {
@@ -62,6 +84,7 @@ $page_path = "./pages/{$page}.php";
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq" crossorigin="anonymous"></script>
+
 </body>
 
 </html>

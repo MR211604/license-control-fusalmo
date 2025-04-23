@@ -4,13 +4,8 @@
 require __DIR__ . '/../utils/license-helpers.php';
 require __DIR__ . '/../utils/email-helpers.php';
 
-
-// Verificar si el usuario está autenticado
-if (!isset($_SESSION["user_id"])) {
-  // Redirigir usando el parámetro page en lugar de cambiar la URL completa
-  header("Location: index.php?page=login");
-  exit();
-}
+// Determinar la URL de la API (Docker vs desarrollo local)
+$api_url = getenv('API_URL') ?: 'http://localhost:8080';
 
 // Obtener las licencias desde la API
 $licenses = [];
@@ -42,7 +37,7 @@ if (isset($_GET['sendEmail']) && $_GET['sendEmail'] === 'true') {
 try {
   // Configurar la petición cURL para obtener todas las licencias
   $ch = curl_init();
-  curl_setopt($ch, CURLOPT_URL, 'http://localhost:8080/license/getAll');
+  curl_setopt($ch, CURLOPT_URL, $api_url . '/license/getAll');
   curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
   curl_setopt($ch, CURLOPT_HTTPHEADER, [
     'Content-Type: application/json',
@@ -95,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
     ];
 
     $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, 'http://localhost:8080/license/create');
+    curl_setopt($ch, CURLOPT_URL, $api_url . '/license/create');
     curl_setopt($ch, CURLOPT_POST, 1);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -117,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         $error_message = "Error al obtener datos de la licencia.";
       }
     } else {
-      $error_message = isset($responseData['error']) ? $responseData['error'] : "Error desconocido al crear la licencia.";      
+      $error_message = isset($responseData['error']) ? $responseData['error'] : "Error desconocido al crear la licencia.";
     }
   }
 }
@@ -130,7 +125,6 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
   <h1>Administración de licencias de FUSALMO</h1>
 </div>
 <!-- Formulario de licencias -->
-
 <?php if ($success_message): ?>
   <div class="alert alert-success alert-dismissible fade show">
     <?php echo htmlspecialchars($success_message); ?>
@@ -177,77 +171,76 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
           <button type="submit" class="btn btn-primary">Agregar nueva licencia</button>
         </div>
       </div>
-
   </form>
-
 </div>
 
 <!-- Tabla de licencias -->
-<div class="table-responsive">
-  <table class="mt-3 table table-bordered table-light">
-    <thead class="table-active">
-      <tr>
-        <th>ID</th>
-        <th>Plataforma</th>
-        <th>Correo</th>
-        <th>Contraseña</th>
-        <th>Fecha de compra</th>
-        <th>Fecha de vencimiento</th>
-        <th>Fecha de renovación</th>
-        <th>Fecha de suspensión</th>
-        <th>Estado</th>
-        <th>Opciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      <?php if (empty($licenses)): ?>
+<div class="container mt-3">
+  <div class="table-responsive">
+    <table class="mt-3 table table-bordered table-light">
+      <thead class="table-active">
         <tr>
-          <td colspan="8" class="text-center">No hay licencias disponibles</td>
+          <th>ID</th>
+          <th>Plataforma</th>
+          <th>Correo</th>
+          <th>Contraseña</th>
+          <th>Fecha de compra</th>
+          <th>Fecha de vencimiento</th>
+          <th>Fecha de renovación</th>
+          <th>Fecha de suspensión</th>
+          <th>Estado</th>
+          <th>Opciones</th>
         </tr>
-      <?php else: ?>
-        <?php foreach ($licenses as $license): ?>
+      </thead>
+      <tbody>
+        <?php if (empty($licenses)): ?>
           <tr>
-            <td><?php echo htmlspecialchars($license['id'] ?? ''); ?></td>
-            <td><?php echo htmlspecialchars($license['plataforma'] ?? ''); ?></td>
-            <td><?php echo htmlspecialchars($license['correo'] ?? ''); ?></td>
-            <td><?php echo htmlspecialchars($license['contrasena'] ?? ''); ?></td>
-            <td><?php echo htmlspecialchars($license['fecha_de_compra'] ?? ''); ?></td>
-            <td><?php echo htmlspecialchars($license['fecha_de_vencimiento'] ?? ''); ?></td>
-            <td><?php echo htmlspecialchars($license['fecha_de_renovacion'] ?? ''); ?></td>
-            <td><?php echo htmlspecialchars($license['fecha_de_suspension'] ?? ''); ?></td>
-            <td>
-              <?php if ($license['suspended'] == 0): ?>
-                <span class="badge text-bg-success">Activa</span>
-              <?php else: ?>
-                <span class="badge text-bg-danger">Suspendida</span>
-              <?php endif; ?>
-            </td>
-            <td>
-              <form method="post">
-                <input type="hidden" name="license_id" value="<?php echo htmlspecialchars($license['id'] ?? ''); ?>" />
-                <div class="d-flex justify-content-center align-items-center" style="gap: 10px;">
-
-                  <?php if ($license['suspended'] == 0): ?>
-                    <button type="submit" name="action_send_email" value="SendEmail" class="btn btn-primary" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Enviar correo">
-                      <i class="bi bi-envelope"></i>
-                    </button>
-                    <a href="index.php?page=licenses/editLicense&id=<?php echo htmlspecialchars($license['id'] ?? ''); ?>" class="btn btn-warning text-white" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Editar licencia">
-                      <i class="bi bi-pencil"></i>
-                    </a>
-                    <button type="submit" name="action_suspend" value="Suspend" class="btn btn-danger" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Suspender licencia">
-                      <i class="bi bi-x-circle"></i>
-                    </button>
-                    <button type="submit" name="action_renovate" value="Renovate" class="btn btn-success" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Renovar licencia">
-                      <i class="bi bi-arrow-clockwise"></i>
-                    </button>
-                  <?php endif ?>
-                </div>
-              </form>
-            </td>
+            <td colspan="8" class="text-center">No hay licencias disponibles</td>
           </tr>
-        <?php endforeach; ?>
-      <?php endif; ?>
-    </tbody>
-  </table>
-</div>
+        <?php else: ?>
+          <?php foreach ($licenses as $license): ?>
+            <tr>
+              <td><?php echo htmlspecialchars($license['id'] ?? ''); ?></td>
+              <td><?php echo htmlspecialchars($license['plataforma'] ?? ''); ?></td>
+              <td><?php echo htmlspecialchars($license['correo'] ?? ''); ?></td>
+              <td><?php echo htmlspecialchars($license['contrasena'] ?? ''); ?></td>
+              <td><?php echo htmlspecialchars($license['fecha_de_compra'] ?? ''); ?></td>
+              <td><?php echo htmlspecialchars($license['fecha_de_vencimiento'] ?? ''); ?></td>
+              <td><?php echo htmlspecialchars($license['fecha_de_renovacion'] ?? ''); ?></td>
+              <td><?php echo htmlspecialchars($license['fecha_de_suspension'] ?? ''); ?></td>
+              <td>
+                <?php if ($license['suspended'] == 0): ?>
+                  <span class="badge text-bg-success">Activa</span>
+                <?php else: ?>
+                  <span class="badge text-bg-danger">Suspendida</span>
+                <?php endif; ?>
+              </td>
+              <td>
+                <form method="post">
+                  <input type="hidden" name="license_id" value="<?php echo htmlspecialchars($license['id'] ?? ''); ?>" />
+                  <div class="d-flex justify-content-center align-items-center" style="gap: 10px;">
+
+                    <?php if ($license['suspended'] == 0): ?>
+                      <button type="submit" name="action_send_email" value="SendEmail" class="btn btn-primary" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Enviar correo">
+                        <i class="bi bi-envelope"></i>
+                      </button>
+                      <a href="index.php?page=licenses/editLicense&id=<?php echo htmlspecialchars($license['id'] ?? ''); ?>" class="btn btn-warning text-white" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Editar licencia">
+                        <i class="bi bi-pencil"></i>
+                      </a>
+                      <button type="submit" name="action_suspend" value="Suspend" class="btn btn-danger" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Suspender licencia">
+                        <i class="bi bi-x-circle"></i>
+                      </button>
+                      <button type="submit" name="action_renovate" value="Renovate" class="btn btn-success" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Renovar licencia">
+                        <i class="bi bi-arrow-clockwise"></i>
+                      </button>
+                    <?php endif ?>
+                  </div>
+                </form>
+              </td>
+            </tr>
+          <?php endforeach; ?>
+        <?php endif; ?>
+      </tbody>
+    </table>
+  </div>
 </div>

@@ -7,11 +7,12 @@
  */
 function sendEmail($licenseId)
 {
+  global $api_url;
 
   //*Primero obtenemos la licencia
   try {
     $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, "http://localhost:8080/license/{$licenseId}");
+    curl_setopt($ch, CURLOPT_URL, $api_url . "/license/{$licenseId}");
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
       'Content-Type: application/json',
@@ -40,8 +41,8 @@ function sendEmail($licenseId)
 
 function sendEmailFunction($email, $subject, $messageBody)
 {
-
   global $error_message;
+  global $api_url;
 
   //Llamaremos a la API de envio de correos
   $data = [
@@ -51,7 +52,7 @@ function sendEmailFunction($email, $subject, $messageBody)
   ];
 
   $ch = curl_init();
-  curl_setopt($ch, CURLOPT_URL, 'http://localhost:8080/email/send');
+  curl_setopt($ch, CURLOPT_URL, $api_url . '/email/send');
   curl_setopt($ch, CURLOPT_POST, 1);
   curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
   curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
