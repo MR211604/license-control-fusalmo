@@ -1,7 +1,6 @@
 <?php
 
-$api_url = getenv('API_URL') ?: 'http://localhost:8080';
-
+require __DIR__ . '/../../utils/api-url.php';
 
 if (!isset($_SESSION["id_rol"]) || $_SESSION["id_rol"] != 1) {
   header("Location: index.php?page=home");

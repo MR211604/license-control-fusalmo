@@ -1,6 +1,6 @@
 <?php
 
-$api_url = getenv('API_URL') ?: 'http://localhost:8080';
+require __DIR__ . '/../../utils/api-url.php';
 
 if (!isset($_SESSION["user_id"])) {
   header("Location: index.php?page=login");

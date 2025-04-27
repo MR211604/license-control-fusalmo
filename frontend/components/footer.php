@@ -21,7 +21,6 @@
     z-index: 100;
   }
 
-  /* Asegurar que el contenido principal no se oculte detrás del footer */
   body {
     min-height: 100vh;
     position: relative;

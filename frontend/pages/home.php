@@ -3,9 +3,7 @@
 
 require __DIR__ . '/../utils/license-helpers.php';
 require __DIR__ . '/../utils/email-helpers.php';
-
-// Determinar la URL de la API (Docker vs desarrollo local)
-$api_url = getenv('API_URL') ?: 'http://localhost:8080';
+require __DIR__ . '/../utils/api-url.php';
 
 // Obtener las licencias desde la API
 $licenses = [];

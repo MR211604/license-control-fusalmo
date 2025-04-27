@@ -1,15 +1,13 @@
 <?php
-// Iniciar buffer de salida
-ob_start();
 
-// Iniciar sesión al principio
+ob_start();
 session_start();
 
 // Determinar qué página mostrar
 $page = isset($_GET['page']) ? $_GET['page'] : 'home';
 
-// Lista de páginas válidas
-$allowed_pages = ['home', 'login', 'register', 'licenses/editLicense', 'admin/users', 'admin/editUser'];
+
+$allowed_pages = ['home', 'login', 'licenses/editLicense', 'admin/users', 'admin/editUser'];
 
 // Validar la página
 if (!in_array($page, $allowed_pages)) {
@@ -17,7 +15,7 @@ if (!in_array($page, $allowed_pages)) {
 }
 
 // Verificar autenticación (excepto para la página de login)
-if ($page !== 'login' && $page !== 'register' && !isset($_SESSION["user_id"])) {
+if ($page !== 'login' && !isset($_SESSION["user_id"])) {
   header("Location: index.php?page=login");
   exit();
 }
