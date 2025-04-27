@@ -47,11 +47,6 @@ $r->addGroup('/user', function (RouteCollector $r) use ($userController) {
   $r->addRoute('POST', '/enable/{id:\d+}', [$userController, 'enableUser']);
 });
 
-//Selects
-$r->addGroup('/select', function (RouteCollector $r) use ($userController) {
-  $r->addRoute('GET', '/getAllUsers', [$userController, 'getUsersSelect']);
-});
-
 //Email sending
 $r->addGroup('/email', function (RouteCollector $r) use ($emailService) {
   $r->addRoute('POST', '/send', [$emailService, 'sendEmail']);
